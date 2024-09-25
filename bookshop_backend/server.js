@@ -60,7 +60,7 @@ app.use("/conversation", conversationRouter);
 
 app.use("/chat", chatRouter);
 
-app.use("/file", fileRouter);
+app.use("/upload", fileRouter);
 
 // Serve static images
 app.use("/upload", express.static("upload"));

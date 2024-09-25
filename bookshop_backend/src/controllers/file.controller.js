@@ -8,6 +8,7 @@ const { v4: uuidv4 } = require("uuid");
 // Using multer
 const multer = require("multer");
 const path = require("path");
+const { required } = require("joi");
 
 // Configure storage for different file types
 const storage = multer.diskStorage({
@@ -41,10 +42,11 @@ const upload = multer({ storage: storage });
 const uploadUserImage = upload.single("user");
 const uploadBookImage = upload.single("book");
 const uploadOtherImage = upload.single("file");
+const uploadBookImages = upload.array("books", 10);
 
 // Response handler for successful upload
 const uploadResponse = (req, res) => {
-  if (!req.file) {
+  if (!req.file && !req.user && !req.book) {
     return response(
       res,
       StatusCodes.INTERNAL_SERVER_ERROR,
@@ -69,9 +71,44 @@ const uploadResponse = (req, res) => {
     {
       image_url: `http://localhost:${
         process.env.PORT || 5000
-      }/upload/${folder}/${req.file.filename}`,
+      }/upload/${folder}/${
+        req.file.filename || req.book.filename || req.user.filename
+      }`,
+      image_name: `${
+        req.file.filename || req.book.filename || req.user.filename
+      }`,
     },
     null
+  );
+};
+
+// Response handler for multiple files upload
+const uploadMultipleResponse = (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return response(
+      res,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      false,
+      {},
+      "No files uploaded"
+    );
+  }
+
+  const folder = "book";
+  // Create an array of file information to send in the response
+  const fileDetails = req.files.map((file) => ({
+    image_url: `http://localhost:${process.env.PORT || 5000}/upload/${folder}/${
+      file.filename
+    }`,
+    image_name: `${file.filename}`,
+  }));
+
+  response(
+    res,
+    StatusCodes.OK,
+    true,
+    { files: fileDetails },
+    "Files uploaded successfully"
   );
 };
 
@@ -195,5 +232,7 @@ module.exports = {
   uploadUserImage,
   uploadBookImage,
   uploadOtherImage,
+  uploadBookImages,
   uploadResponse,
+  uploadMultipleResponse,
 };

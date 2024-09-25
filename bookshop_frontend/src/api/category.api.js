@@ -26,3 +26,16 @@ export const deleteCategory = async (id) => {
   const response = await instance.delete(`${baseURL}/delete/${id}`);
   return response;
 };
+
+export const getCategoriesOnParentId = async (body) => {
+  const response = await instance.post(`${baseURL}/get-on-parent-id`, body);
+  return response;
+};
+
+export const getCategoriesOnIds = async (body) => {
+  const response = await instance.post(
+    `${baseURL}/get-categories-on-ids`,
+    body
+  );
+  return response;
+};

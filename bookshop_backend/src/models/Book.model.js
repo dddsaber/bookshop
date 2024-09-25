@@ -13,6 +13,9 @@ const bookSchema = mongoose.Schema(
     costPrice: {
       type: Number,
     },
+    ibsn: {
+      type: String,
+    },
     price: {
       type: Number,
     },
@@ -27,11 +30,7 @@ const bookSchema = mongoose.Schema(
     description: {
       type: String,
     },
-    ibsn: {
-      type: String,
-      unique: true,
-    },
-    authorId: [
+    authors: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Author",
@@ -40,6 +39,7 @@ const bookSchema = mongoose.Schema(
     categories: [
       {
         type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
       },
     ],
     isDeleted: {
@@ -52,6 +52,35 @@ const bookSchema = mongoose.Schema(
       default: 0.0,
       min: 0.0,
       max: 1.0,
+    },
+    language: {
+      type: [String],
+    },
+    weight: {
+      type: Number,
+    },
+    pages: {
+      type: Number,
+    },
+    format: {
+      type: [String],
+    },
+    height: {
+      type: Number,
+    },
+    width: {
+      type: Number,
+    },
+    ageRange: {
+      type: String,
+    },
+    publisher: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Publisher",
+    },
+    supplier: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Supplier",
     },
   },
   { timestamps: true }

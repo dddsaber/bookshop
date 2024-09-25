@@ -24,9 +24,16 @@ import {
   UnlockOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import { getSourceImage, TYPE_USER } from "../../../utils/constans";
-import { createUser, getUsers, updateUser } from "../../../api/user.api";
-import { Option } from "antd/es/mentions";
+import { Gender, TYPE_USER } from "../../../utils/constans";
+import {
+  changeActiveStatus,
+  createUser,
+  getUsers,
+  updateUser,
+} from "../../../api/user.api";
+import dayjs from "dayjs";
+import { uploadFileUser } from "../../../api/file.api";
+import { getSourceUserImage } from "../../../utils/image";
 
 const UsersPage = () => {
   const handleTableChange = (pagination, filter) => {
@@ -34,7 +41,7 @@ const UsersPage = () => {
     setFilter(() => {
       return {
         userTypes: filter.userTypes,
-        activeStatuses: filter.activeStatuse,
+        isActives: filter.isActive,
       };
     });
   };
@@ -43,19 +50,29 @@ const UsersPage = () => {
     form
       .validateFields()
       .then(async (values) => {
+        if (avatar) {
+          const imgResponse = await uploadFileUser(avatar);
+          if (imgResponse.status) {
+            values.avatar = imgResponse.data.image_name;
+          }
+        }
+
         if (selectedUser) {
           const response = await updateUser({
             ...values,
             _id: selectedUser._id,
           });
-          notification.success({ message: "User updated successfully!" });
-          console.log(response);
+          if (response.status)
+            notification.success({ message: "User updated successfully!" });
         } else {
           const response = await createUser(values);
           notification.success({ message: "User created successfully!" });
-          console.log(response);
+          if (response.status) {
+            notification.success({ message: "User updated successfully!" });
+          }
         }
         form.resetFields();
+        setAvatar(false);
         setIsVisible(false);
         setSelectedUser(null);
         setReload(!reload);
@@ -79,14 +96,16 @@ const UsersPage = () => {
     try {
       const user = {
         _id: record._id,
-        activeStatus: !record.activeStatus,
+        isActive: !record.isActive,
       };
-      // await changeActiveStatus(user);
+      await changeActiveStatus(user);
+
       notification.success({
         message: `Tài khoản ${
           user.activeStatus ? "Mở khóa" : "khóa"
         } thành công`,
       });
+
       setReload(!reload);
     } catch (error) {
       console.log(error);
@@ -97,14 +116,24 @@ const UsersPage = () => {
   const handleEdit = async (record) => {
     try {
       setSelectedUser(record);
-      form.setFieldValue({
+      form.setFieldsValue({
         ...record,
+        birthday: dayjs(record.birthday),
       });
+      setIsVisible(true);
     } catch (error) {
       console.log(error);
-      notification.error({ message: `Failed to load user: ${error}` });
+      notification.error({ message: "Có lỗi xảy ra" });
     }
   };
+
+  const imageHandler = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setAvatar(e.target.files[0]); // Lưu trữ file ảnh vào state
+    }
+  };
+
+  const [avatar, setAvatar] = useState(false);
 
   const [isVisible, setIsVisible] = useState(false);
   const [form] = Form.useForm();
@@ -120,7 +149,7 @@ const UsersPage = () => {
   });
   const [filter, setFilter] = useState({
     userTypes: [TYPE_USER.user, TYPE_USER.admin],
-    activeStatuses: [true],
+    isActives: [true],
   });
 
   const columns = [
@@ -137,7 +166,7 @@ const UsersPage = () => {
       dataIndex: "avatar",
       width: 60,
       key: "avatar",
-      render: (avatar) => <Avatar src={getSourceImage(avatar)} />,
+      render: (avatar) => <Avatar src={getSourceUserImage(avatar)} />,
     },
     {
       title: "Email",
@@ -158,9 +187,9 @@ const UsersPage = () => {
       title: "Giới tính",
       dataIndex: "gender",
       key: "gender",
-      // render: (gender) => {
-      //   return Gender[gender];
-      // },
+      render: (gender) => {
+        return Gender[gender];
+      },
     },
     {
       width: 120,
@@ -189,7 +218,7 @@ const UsersPage = () => {
           value: false,
         },
       ],
-      filteredValue: filter.activeStatuses,
+      filteredValue: filter.isActives,
       render: (_, { isActive }) => (
         <>
           <Tag color={isActive ? "green" : "red"} key={isActive}>
@@ -207,21 +236,29 @@ const UsersPage = () => {
       key: "action",
       render: (_, record) => (
         <Space size="middle">
-          <Tooltip
-            title={
-              record?.activeStatus ? "Bạn muốn khóa ?" : "Bạn muốn mở khóa?"
-            }
-          >
-            <Button
-              type="text"
-              onClick={() => handleStatus(record)}
-              icon={
-                record?.activeStatus ? <UnlockOutlined /> : <LockOutlined />
-              }
-            ></Button>
-          </Tooltip>
-          {record?.userType === TYPE_USER.user ? null : (
-            <Tooltip title="Chỉnh sửa thông tin">
+          {record?.userType === TYPE_USER.admin ? null : (
+            <Tooltip
+              title={record?.isActive ? "Bạn muốn khóa ?" : "Bạn muốn mở khóa?"}
+            >
+              <Popconfirm
+                title={
+                  record?.isActive
+                    ? "Bạn có chắc muốn khóa?"
+                    : "Bạn có chắc muốn mở khóa?"
+                }
+                onConfirm={() => handleStatus(record)}
+              >
+                <Button
+                  type="text"
+                  icon={
+                    record?.isActive ? <UnlockOutlined /> : <LockOutlined />
+                  }
+                ></Button>
+              </Popconfirm>
+            </Tooltip>
+          )}
+          {record?.userType === TYPE_USER.admin ? null : (
+            <Tooltip title="Edit infomation">
               <Button
                 type="text"
                 onClick={() => handleEdit(record)}
@@ -245,11 +282,8 @@ const UsersPage = () => {
           skip: pagination.pageSize * (pagination.current - 1),
           ...filter,
         });
-        console.log(response);
         const result = response.data;
-        console.log(result);
         setUsers(result?.users);
-        console.log(users);
         setPagination({
           ...pagination,
           total: result?.total,
@@ -293,8 +327,8 @@ const UsersPage = () => {
       <Title title="Manage Accounts" />
       <Flex gap={10} justify="space-between" style={{ marginBottom: 10 }}>
         <Flex>
-          <Tooltip title="Recover">
-            <Button onClick={() => {}}>
+          <Tooltip title="Refesh">
+            <Button onClick={handleResearch}>
               <ReloadOutlined />
             </Button>
           </Tooltip>
@@ -333,6 +367,8 @@ const UsersPage = () => {
         cancelText="Cancel"
         onCancel={handleCancel}
         destroyOnClose
+        style={{ top: 10, width: 700 }}
+        width={700}
       >
         <Form
           form={form}
@@ -344,7 +380,7 @@ const UsersPage = () => {
         >
           <Form.Item
             label="Họ tên"
-            name="fullName"
+            name="name"
             rules={[
               {
                 required: true,
@@ -380,8 +416,8 @@ const UsersPage = () => {
             rules={[{ required: true, message: "Vui lòng giới tính!" }]}
           >
             <Select style={{ width: 100 }}>
-              <Option value="male">Nam</Option>
-              <Option value="female">Nữ</Option>
+              <Select.Option value={true}>Nam</Select.Option>
+              <Select.Option value={false}>Nữ</Select.Option>
             </Select>
           </Form.Item>
           <Form.Item name="address" label="Địa chỉ">
@@ -401,6 +437,7 @@ const UsersPage = () => {
             <Input />
           </Form.Item>
         </Form>
+        <Input type="file" onChange={imageHandler} name="avatar" />
       </Modal>
     </div>
   );

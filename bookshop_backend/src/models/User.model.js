@@ -51,11 +51,6 @@ const userSchema = new mongoose.Schema(
     resetPasswordExpiry: {
       type: Date,
     },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-      required: true,
-    },
   },
   { timestamps: true }
 );

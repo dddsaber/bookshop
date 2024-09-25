@@ -3,12 +3,14 @@ const {
   uploadUserImage,
   uploadBookImage,
   uploadOtherImage,
+  uploadBookImages,
   uploadResponse,
+  uploadMultipleResponse,
 } = require("../controllers/file.controller");
 const router = new Router();
 
-router.post("/upload/user", uploadUserImage, uploadResponse);
-router.post("/upload/book", uploadBookImage, uploadResponse);
-router.post("/upload/others", uploadOtherImage, uploadResponse);
-
+router.post("/user", uploadUserImage, uploadResponse);
+router.post("/book", uploadBookImage, uploadResponse);
+router.post("/others", uploadOtherImage, uploadResponse);
+router.post("/books", uploadBookImages, uploadMultipleResponse);
 module.exports = router;

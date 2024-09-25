@@ -271,14 +271,14 @@ const softDeleteUser = async (req, res) => {
 
 // Update Status
 const updateStatus = async (req, res) => {
-  const { activeStatus } = req.body;
+  const { isActive } = req.body;
 
   const id = req.params.id;
 
   let user = {};
 
-  if (activeStatus !== undefined) {
-    user.activeStatus = activeStatus;
+  if (isActive !== undefined) {
+    user.isActive = isActive;
   }
 
   if (user) {

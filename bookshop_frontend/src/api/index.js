@@ -34,6 +34,25 @@ export const imgInstance = axios.create({
   baseURL: `${baseURL}/upload`,
   headers: {
     Accept: "application/json",
-    "Content-Type": "multipart/form-data",
   },
 });
+
+imgInstance.interceptors.request.use(function (config) {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+imgInstance.interceptors.response.use(
+  (response) => {
+    return response.data;
+  },
+  (error) => {
+    notification.error({
+      message: error.response.data.message,
+    });
+    return Promise.reject(error.response.data);
+  }
+);

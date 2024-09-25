@@ -9,10 +9,10 @@ const categorySchema = mongoose.Schema(
     description: {
       type: String,
     },
-    isForeign: {
-      type: Boolean,
-      default: false,
-      required: true,
+    parentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
     },
   },
   {

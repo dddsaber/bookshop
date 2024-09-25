@@ -5,6 +5,7 @@ import {
 } from "react-router-dom";
 import {
   BellOutlined,
+  BookOutlined,
   DashboardOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
@@ -86,6 +87,12 @@ const LayoutPage = () => {
           icon: <UsergroupAddOutlined />,
           label: "Users",
           link: "/users",
+        });
+        menuItems.push({
+          key: "books",
+          icon: <BookOutlined />,
+          label: "Book",
+          link: "/books",
         });
         menuItems.push({
           key: "chat",

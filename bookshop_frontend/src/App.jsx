@@ -12,6 +12,8 @@ import ResetPasswordPage from "./page/auth/ResetPasswordPage";
 import RegisterPage from "./page/auth/RegisterPage";
 import { getSourceBookImage } from "./utils/image";
 import UsersPage from "./page/admin/users/UsersPage";
+import { TYPE_USER } from "./utils/constans";
+import BooksPage from "./page/admin/books/BooksPage";
 
 // Private Route for confirm admin
 const PrivateRoute = ({ element, requiredPermission = [] }) => {
@@ -91,7 +93,24 @@ function App() {
         <Route path="/" element={<LayoutPage />}>
           <Route path="/" element={<h1>Home</h1>} />
           <Route path="/profile" element={<PrivateRoute element={<></>} />} />
-          <Route path="/users" element={<UsersPage />} />
+          <Route
+            path="/users"
+            element={
+              <PrivateRoute
+                element={<UsersPage />}
+                requiredPermission={[TYPE_USER.admin]}
+              />
+            }
+          />
+          <Route
+            path="/books"
+            element={
+              <PrivateRoute
+                element={<BooksPage />}
+                requiredPermission={[TYPE_USER.admin]}
+              />
+            }
+          />
           <Route
             path="/home"
             element={

@@ -64,6 +64,39 @@ const DELIVERY_STATUS = {
   cancelled: "cancelled",
 };
 
+const LANGUAGE = {
+  en: "en",
+  vi: "vi",
+  ko: "ko",
+  zh: "zh",
+  ja: "ja",
+};
+
+const FORMAT_BOOK = {
+  hardback: "hardback",
+  paperback: "paperback",
+  ebook: "ebook",
+};
+
+const AGE_RANGE = {
+  u6: "Dưới 6 tuổi",
+  u12: "Dưới 12 tuổi",
+  u18: "Dưới 18 tuổi",
+  a18: "Hơn 18 tuổi",
+};
+
+const BOOK_PRICE_FILTERS = [
+  { label: "Dưới 200,000 VNĐ", value: { min: 0, max: 200000 } },
+  {
+    label: "Từ 200,000 VNĐ đến 500,000 VNĐ",
+    value: { min: 200000, max: 500000 },
+  },
+  {
+    label: "Từ 500,000 VNĐ đến 1,000,000 VNĐ",
+    value: { min: 500000, max: 1000000 },
+  },
+  { label: "Trên 1,000,000 VNĐ", value: { min: 1000000, max: Infinity } },
+];
 module.exports = {
   PASSWORD_DEFAULT,
   TYPE_USER,
@@ -76,4 +109,5 @@ module.exports = {
   BOOK_SHOP_PASSWORD,
   htmlContentForConfirmPassword,
   confirmationUrl,
+  LANGUAGE,
 };

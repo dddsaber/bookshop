@@ -78,6 +78,50 @@ const getCategories = async (req, res) => {
   }
 };
 
+const getLeafCategories = async (req, res) => {
+  try {
+    const leafNodes = await Category.aggregate([
+      {
+        $lookup: {
+          from: "categories", // Tên collection của Category
+          localField: "_id",
+          foreignField: "parentId",
+          as: "children",
+        },
+      },
+      {
+        $match: {
+          "children.0": { $exists: false }, // Chỉ các category không có children
+        },
+      },
+    ]);
+    if (!leafNodes) {
+      return response(
+        res,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        false,
+        {},
+        "Failed to retrieve leaf categories"
+      );
+    }
+    return response(
+      res,
+      StatusCodes.OK,
+      true,
+      leafNodes,
+      "Leaf categories retrieved successfully"
+    );
+  } catch (error) {
+    return response(
+      res,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      false,
+      {},
+      error.message
+    );
+  }
+};
+
 const getCategoryById = async (req, res) => {
   const categoryId = req.params.id;
 
@@ -100,6 +144,93 @@ const getCategoryById = async (req, res) => {
       true,
       category,
       "Category retrieved successfully"
+    );
+  } catch (error) {
+    return response(
+      res,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      false,
+      {},
+      error.message
+    );
+  }
+};
+
+const getCategoriesOnParentId = async (req, res) => {
+  const { parentId } = req.body;
+
+  try {
+    let categories;
+    if (Array.isArray(parentId) && parentId.length > 0) {
+      // Nếu parentId là một mảng và có phần tử
+      categories = await Category.find({ parentId: { $in: parentId } });
+    } else {
+      // Nếu parentId là null hoặc không có giá trị
+      categories = await Category.find({ parentId: null });
+    }
+
+    if (!categories) {
+      return response(
+        res,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        false,
+        {},
+        "Failed to retrieve categories"
+      );
+    }
+
+    return response(
+      res,
+      StatusCodes.OK,
+      true,
+      categories,
+      "Categories retrieved successfully"
+    );
+  } catch (error) {
+    return response(
+      res,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      false,
+      {},
+      error.message
+    );
+  }
+};
+
+const getCategoriesOnIds = async (req, res) => {
+  const Ids = req.body;
+  try {
+    let categories;
+    if (Array.isArray(Ids) && Ids.length > 0) {
+      // Nếu parentId là một mảng và có phần tử
+      categories = await Category.find({ _id: { $in: Ids } });
+    } else {
+      // Nếu parentId là null hoặc không có giá trị
+      return response(
+        res,
+        StatusCodes.BAD_REQUEST,
+        false,
+        {},
+        "Ids must be an array with at least one element"
+      );
+    }
+
+    if (!categories) {
+      return response(
+        res,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        false,
+        {},
+        "Failed to retrieve categories"
+      );
+    }
+
+    return response(
+      res,
+      StatusCodes.OK,
+      true,
+      categories,
+      "Categories retrieved successfully"
     );
   } catch (error) {
     return response(
@@ -200,4 +331,7 @@ module.exports = {
   getCategoryById,
   updateCategory,
   deleteCategory,
+  getLeafCategories,
+  getCategoriesOnParentId,
+  getCategoriesOnIds,
 };
