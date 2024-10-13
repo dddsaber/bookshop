@@ -32,7 +32,7 @@ import {
   FORMAT_BOOK_STR,
   LANGUAGE_STR,
 } from "../../../utils/constans";
-import { uploadFilesBook } from "../../../api/file.api";
+import { uploadFileBook, uploadFilesBook } from "../../../api/file.api";
 import {
   createBook,
   deleteBook,
@@ -42,6 +42,7 @@ import {
 
 const BooksPage = () => {
   const [images, setImages] = useState([]);
+  const [coverImage, setCoverImage] = useState(false);
   const [form] = Form.useForm();
   const [selectedBook, setSelectedBook] = useState();
   const [keyword, setKeyword] = useState("");
@@ -199,6 +200,12 @@ const BooksPage = () => {
 
   const handleOk = () => {
     form.validateFields().then(async (values) => {
+      if (coverImage) {
+        const coverImageResponse = await uploadFileBook(coverImage);
+        if (coverImageResponse.status) {
+          values.coverPhoto = coverImageResponse.data.image_name;
+        }
+      }
       if (images.length > 0) {
         const imgResponse = await uploadFilesBook(images);
         if (imgResponse && imgResponse.status) {
@@ -213,6 +220,7 @@ const BooksPage = () => {
           }
         }
       }
+      // eslint-disable-next-line no-unused-vars
       const { categoriesLv1, categoriesLv2, ...sendValues } = values;
 
       if (selectedBook) {
@@ -237,8 +245,13 @@ const BooksPage = () => {
   };
   const imageHandler = (e) => {
     const fileList = [...e.target.files];
-    console.log(fileList);
     setImages(fileList);
+  };
+  const coverImageHandler = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCoverImage(file);
+    }
   };
   const handleResearch = () => {
     setKeyword("");
@@ -260,11 +273,11 @@ const BooksPage = () => {
     },
     {
       title: "Photo",
-      dataIndex: "photos",
-      key: "photos",
+      dataIndex: "coverPhoto",
+      key: "coverPhoto",
       width: 120,
       align: "center",
-      render: (photos) => <Image src={getSourceBookImage(photos[0])} />,
+      render: (coverPhoto) => <Image src={getSourceBookImage(coverPhoto)} />,
     },
     {
       title: "Title",
@@ -373,7 +386,7 @@ const BooksPage = () => {
     },
   ];
   return (
-    <div>
+    <div style={{ padding: "20px" }}>
       <Title title="Manage Books" />
       <Flex gap={10} justify="space-between" style={{ marginBottom: 10 }}>
         <Flex>
@@ -636,6 +649,9 @@ const BooksPage = () => {
             <Input.TextArea autoSize={{ minRows: 3, maxRows: 5 }} />
           </Form.Item>
         </Form>
+        <span>Main image:</span>
+        <Input type="file" onChange={coverImageHandler} name="coverPhoto" />
+        <span>Side images:</span>
         <Input type="file" onChange={imageHandler} name="photos" multiple />
       </Modal>
     </div>

@@ -198,10 +198,10 @@ const getCategoriesOnParentId = async (req, res) => {
 };
 
 const getCategoriesOnIds = async (req, res) => {
-  const Ids = req.body;
+  const { Ids } = req.body;
   try {
     let categories;
-    if (Array.isArray(Ids) && Ids.length > 0) {
+    if (Array.isArray(Ids)) {
       // Nếu parentId là một mảng và có phần tử
       categories = await Category.find({ _id: { $in: Ids } });
     } else {

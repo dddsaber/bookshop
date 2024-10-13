@@ -1,7 +1,11 @@
 const { User } = require("../../models/User.model");
 const { compare } = require("bcrypt");
-const { createToken } = require("../../utils/config");
-const { verifyToken } = require("../../utils/protected");
+const {
+  createToken,
+  verifyToken,
+  verifyRefreshToken,
+  createAccessToken,
+} = require("../../utils/protected");
 const { StatusCodes } = require("http-status-codes");
 const { response } = require("../../utils/response");
 const crypto = require("crypto");
@@ -19,6 +23,7 @@ const {
   BOOK_SHOP_EMAIL,
   BOOK_SHOP_PASSWORD,
 } = require("../../utils/constants");
+const { accessSync } = require("fs");
 
 // ----------------------------------------------------------------
 // User registers a new account
@@ -62,8 +67,6 @@ const register = async (req, res) => {
       status: "active",
       avatar: "http://localhost:5000/images/user/default_avatar.png",
     });
-    console.log(user);
-    const token = createToken(user);
 
     if (!user) {
       return response(
@@ -74,12 +77,15 @@ const register = async (req, res) => {
         "Could not create user do to user'serror"
       );
     }
+    const { accessToken, refreshToken } = createToken(user);
+    user.refreshToken = refreshToken;
+    await user.save();
 
     return response(
       res,
       StatusCodes.CREATED,
       true,
-      { user, token },
+      { user, token: accessToken, refreshToken: refreshToken },
       "User created successfully"
     );
   } catch (error) {
@@ -120,14 +126,17 @@ const login = async (req, res) => {
     const isMatch = await compare(password, user.password);
 
     if (isMatch) {
-      const token = createToken(user);
+      const { accessToken, refreshToken } = createToken(user);
+
       if (user.isActive) {
-        if (token) {
+        if (accessToken && refreshToken) {
+          user.refreshToken = refreshToken;
+          user.save();
           return response(
             res,
             StatusCodes.OK,
             true,
-            { user, token },
+            { user, token: accessToken, refreshToken: refreshToken },
             "Logged in successfully"
           );
         }
@@ -172,13 +181,13 @@ const login = async (req, res) => {
 // Re-authentication
 // ----------------------------------------------------------------
 const reAuth = async (req, res) => {
-  const { token } = req.body;
+  const { refreshToken } = req.body;
 
-  if (!token) {
+  if (!refreshToken) {
     return response(res, StatusCodes.BAD_REQUEST, false, {}, "Missing token");
   }
   try {
-    const result = await verifyToken(token);
+    const result = await verifyRefreshToken(refreshToken);
 
     if (result) {
       const user = await User.findById(result._id);
@@ -200,14 +209,23 @@ const reAuth = async (req, res) => {
           "User account is blocked"
         );
       }
+      if (user.refreshToken !== refreshToken) {
+        return response(
+          res,
+          StatusCodes.FORBIDDEN,
+          false,
+          {},
+          "User account has been logged out. Please login again."
+        );
+      }
 
-      const newToken = createToken(user);
-      if (newToken) {
+      const accessToken = createAccessToken(user);
+      if (accessToken) {
         return response(
           res,
           StatusCodes.OK,
           true,
-          { user: user, token: newToken },
+          { user: user, token: accessToken, refreshToken: refreshToken },
           "User re-authenticated successfully"
         );
       } else {
@@ -231,6 +249,33 @@ const reAuth = async (req, res) => {
   }
 };
 
+// ----------------------------------------------------------------
+// User log out
+// ----------------------------------------------------------------
+const logout = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const user = await User.findByIdAndUpdate(id, { refreshToken: null });
+    if (!user) {
+      return response(res, StatusCodes.NOT_FOUND, false, {}, "User not found");
+    }
+    return response(
+      res,
+      StatusCodes.NO_CONTENT,
+      true,
+      {},
+      "User logged out successfully"
+    );
+  } catch (error) {
+    return response(
+      res,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      false,
+      {},
+      error.message
+    );
+  }
+};
 // ----------------------------------------------------------------
 // User changes password
 // ----------------------------------------------------------------
@@ -477,4 +522,5 @@ module.exports = {
   resetPassword,
   forgotPassword,
   changePasswordOnConfirm,
+  logout,
 };

@@ -323,7 +323,7 @@ const UsersPage = () => {
   }, [reload, pagination.page, filter]);
 
   return (
-    <div>
+    <div style={{ padding: "20px" }}>
       <Title title="Manage Accounts" />
       <Flex gap={10} justify="space-between" style={{ marginBottom: 10 }}>
         <Flex>

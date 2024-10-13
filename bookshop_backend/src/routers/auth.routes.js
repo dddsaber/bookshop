@@ -3,6 +3,7 @@ const {
   register,
   login,
   reAuth,
+  logout,
   changePassword,
   resetPassword,
   forgotPassword,
@@ -16,7 +17,7 @@ router.post("/login", login);
 router.post("/reauth", reAuth);
 router.post("/change-password", changePassword);
 router.post("/reset-password", resetPassword);
-
+router.get("/logout/:id", logout);
 router.post("/forgot-password", forgotPassword);
 
 router.post("/change-password-on-confirm", changePasswordOnConfirm);

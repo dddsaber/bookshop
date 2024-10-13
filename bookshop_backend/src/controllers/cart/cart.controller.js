@@ -198,13 +198,23 @@ const deleteCartItem = async (req, res) => {
 };
 
 const getCartByUserId = async (req, res) => {
-  const { userId } = req.params.id;
+  const userId = req.params.id;
+  console.log(userId);
+  if (!userId) {
+    return response(
+      res,
+      StatusCodes.BAD_REQUEST,
+      false,
+      {},
+      "User ID is required"
+    );
+  }
   try {
     const cart = await Cart.findOne({ userId });
 
     if (!cart) {
       const items = [];
-      const newCart = Cart.create(userId, items);
+      const newCart = Cart.create({ userId: userId, items });
       return response(
         res,
         StatusCodes.CREATED,

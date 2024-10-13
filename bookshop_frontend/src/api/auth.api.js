@@ -12,6 +12,11 @@ export const login = async (body) => {
 
   return response;
 };
+export const logout = async (id) => {
+  const response = await instance.get(`${BASE_URL}/logout/${id}`);
+
+  return response;
+};
 
 export const reAuth = async (body) => {
   const response = await instance.post(`${BASE_URL}/reauth`, body);

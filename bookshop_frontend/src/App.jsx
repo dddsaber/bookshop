@@ -10,10 +10,12 @@ import LoginPage from "./page/auth/LoginPage";
 import ForgotPasswordPage from "./page/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./page/auth/ResetPasswordPage";
 import RegisterPage from "./page/auth/RegisterPage";
-import { getSourceBookImage } from "./utils/image";
 import UsersPage from "./page/admin/users/UsersPage";
 import { TYPE_USER } from "./utils/constans";
 import BooksPage from "./page/admin/books/BooksPage";
+import DashboardPage from "./page/users/DashboardPage";
+import HomePage from "./page/users/HomePage";
+import BookDetailPage from "./page/users/BookDetailPage";
 
 // Private Route for confirm admin
 const PrivateRoute = ({ element, requiredPermission = [] }) => {
@@ -36,18 +38,21 @@ PrivateRoute.propTypes = {
   element: PropTypes.element.isRequired, // Kiểm tra rằng element là React element
   requiredPermission: PropTypes.arrayOf(PropTypes.string), // Kiểm tra mảng các quyền là mảng chuỗi
 };
-function LogoutPage() {
+function LogoutPage({ userId }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(logoutAuth());
+    dispatch(logoutAuth(userId));
     navigate("/login", { replace: true });
   }, []);
 
-  return <Spin fullscree />;
+  return <Spin fullscreen />;
 }
 
+LogoutPage.propTypes = {
+  userId: PropTypes.string.isRequired,
+};
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -56,21 +61,32 @@ function App() {
   const userId = useSelector((state) => state.auth?.user?._id);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token"); // accessToken
+    const refreshToken = localStorage.getItem("refreshToken"); // refreshToken
     const path = window.location.pathname;
-    if (!userId && token) {
-      dispatch(reloginAuth({ token }));
-    } else if (!token) {
-      const allowedPaths = [
-        "/login",
-        "/register",
-        "/forgot-password",
-        "/change-password",
-      ];
 
-      // Thay đổi điều kiện kiểm tra để bao gồm đường dẫn có userId
-      if (!allowedPaths.some((p) => path.startsWith(p))) {
-        navigate("/login", { replace: true });
+    // Nếu không có userId và có accessToken, đăng nhập lại
+    if (!userId && refreshToken) {
+      dispatch(reloginAuth({ refreshToken }));
+    }
+    // Nếu không có accessToken
+    else if (!token) {
+      // Nếu không có refreshToken, chuyển hướng đến trang login
+      if (!refreshToken) {
+        const allowedPaths = [
+          "/login",
+          "/register",
+          "/forgot-password",
+          "/change-password",
+        ];
+
+        // Chỉ cho phép truy cập vào các đường dẫn này
+        if (!allowedPaths.some((p) => path.startsWith(p))) {
+          navigate("/login", { replace: true });
+        }
+      } else {
+        // Nếu có refreshToken, thử sử dụng nó để lấy accessToken
+        dispatch(reloginAuth({ refreshToken }));
       }
     }
   }, [dispatch, navigate, userId]);
@@ -111,22 +127,16 @@ function App() {
               />
             }
           />
-          <Route
-            path="/home"
-            element={
-              <div style={{ display: "flex", width: "200px" }}>
-                <img
-                  src={getSourceBookImage(
-                    "cay_cam_ngot_cua_toi_1726226522403.jpg"
-                  )}
-                />
-              </div>
-            }
-          />
+
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/book" element={<BookDetailPage />}>
+            <Route path=":bookId" element={<BookDetailPage />} />
+          </Route>
         </Route>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/logout" element={<LogoutPage />} />
+        <Route path="/logout" element={<LogoutPage userId={userId} />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/change-password" element={<ResetPasswordPage />}>
           <Route path=":userId" element={<ResetPasswordPage />} />

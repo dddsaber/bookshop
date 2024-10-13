@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
       required: true,
-      default: "",
+      default: "default.png",
     },
     gender: {
       type: Boolean,
@@ -50,6 +50,9 @@ const userSchema = new mongoose.Schema(
     },
     resetPasswordExpiry: {
       type: Date,
+    },
+    refreshToken: {
+      type: String,
     },
   },
   { timestamps: true }

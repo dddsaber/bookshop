@@ -1,8 +1,9 @@
 import { instance } from ".";
 
-const baseURL = "/auth";
+const baseURL = "/cart";
 
 export const getCart = async (id) => {
+  console.log(id);
   const response = await instance.get(`${baseURL}/${id}`);
   return response;
 };

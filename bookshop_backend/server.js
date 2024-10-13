@@ -1,3 +1,4 @@
+require("dotenv").config();
 const config = require("./src/config/connect");
 const express = require("express");
 const cors = require("cors");
@@ -7,6 +8,7 @@ const bodyParser = require("body-parser");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const { CreateChat } = require("./src/controllers/chat/chat.controller");
+
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));

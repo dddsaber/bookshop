@@ -6,6 +6,11 @@ const bookSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    coverPhoto: {
+      type: String,
+      required: true,
+      default: "default.png",
+    },
     photos: {
       type: [String],
       required: true,
@@ -73,6 +78,9 @@ const bookSchema = mongoose.Schema(
     },
     ageRange: {
       type: String,
+    },
+    publishYear: {
+      type: Date,
     },
     publisher: {
       type: mongoose.Schema.Types.ObjectId,
