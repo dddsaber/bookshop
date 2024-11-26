@@ -1,104 +1,165 @@
-import { Layout, Breadcrumb, Card, Statistic, Row, Col, Table } from "antd";
+import { useEffect, useState } from "react";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels"; // Import plugin datalabels
+import { getRevenueByMonth } from "../../api/order.api";
+import { Select } from "antd";
 
-const { Content, Footer } = Layout;
+// Đăng ký các thành phần của Chart.js và plugin datalabels
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ChartDataLabels // Đăng ký plugin datalabels
+);
 
-// Sample table data
-const columns = [
-  {
-    title: "Name",
-    dataIndex: "name",
-  },
-  {
-    title: "Age",
-    dataIndex: "age",
-  },
-  {
-    title: "Address",
-    dataIndex: "address",
-  },
-];
+const RevenueChart = () => {
+  const [chartData, setChartData] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const currentYear = new Date().getFullYear();
 
-const data = [
-  {
-    key: "1",
-    name: "John Brown",
-    age: 32,
-    address: "New York No. 1 Lake Park",
-  },
-  {
-    key: "2",
-    name: "Jim Green",
-    age: 42,
-    address: "London No. 1 Lake Park",
-  },
-  {
-    key: "3",
-    name: "Joe Black",
-    age: 32,
-    address: "Sidney No. 1 Lake Park",
-  },
-];
+  // Tạo danh sách năm từ 2015 đến hiện tại
+  const years = [];
+  for (let year = 2015; year <= currentYear; year++) {
+    years.push(year);
+  }
+  const fetchRevenueData = async () => {
+    try {
+      // Gửi yêu cầu đến API
+      const response = await getRevenueByMonth({ year: selectedYear });
+      console.log(response);
+      const data = response.data;
 
-const DashboardPage = () => {
+      // Chuyển đổi dữ liệu từ API để phù hợp với biểu đồ
+      const labels = data.map((item) => `Tháng ${item.month}`); // Lấy danh sách các tháng
+      const revenues = data.map((item) => item.totalRevenue); // Lấy tổng doanh thu từng tháng
+      const orderCounts = data.map((item) => item.orderCount); // Lấy số lượng đơn hàng từng tháng
+
+      // Cập nhật dữ liệu biểu đồ
+      setChartData({
+        labels: labels,
+        datasets: [
+          {
+            label: "Doanh thu (VND)",
+            data: revenues,
+            backgroundColor: "rgba(75, 192, 192, 0.6)",
+            borderColor: "rgba(75, 192, 192, 1)",
+            borderWidth: 1,
+            yAxisID: "y1", // Gắn với trục y1 (Doanh thu)
+          },
+          {
+            label: "Số lượng đơn hàng",
+            data: orderCounts,
+            backgroundColor: "rgba(255, 99, 132, 0.6)",
+            borderColor: "rgba(255, 99, 132, 1)",
+            borderWidth: 1,
+            yAxisID: "y2", // Gắn với trục y2 (Số lượng đơn hàng)
+          },
+        ],
+      });
+    } catch (error) {
+      console.error("Error fetching revenue data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRevenueData();
+  }, [selectedYear]);
+
+  // Hàm xử lý khi thay đổi năm
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+  };
+
   return (
-    <div>
-      <Breadcrumb style={{ margin: "16px 0" }}>
-        <Breadcrumb.Item>Home</Breadcrumb.Item>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-      </Breadcrumb>
-      <Content
-        className="site-layout-background"
-        style={{
-          padding: 24,
-          margin: 0,
-          minHeight: 280,
-        }}
-      >
-        <Row gutter={16}>
-          <Col span={8}>
-            <Card>
-              <Statistic
-                title="Active Users"
-                value={1128}
-                valueStyle={{ color: "#3f8600" }}
-              />
-            </Card>
-          </Col>
-          <Col span={8}>
-            <Card>
-              <Statistic
-                title="Total Orders"
-                value={93}
-                valueStyle={{ color: "#cf1322" }}
-              />
-            </Card>
-          </Col>
-          <Col span={8}>
-            <Card>
-              <Statistic
-                title="Revenue"
-                value={21000}
-                precision={2}
-                valueStyle={{ color: "#1890ff" }}
-                prefix="$"
-              />
-            </Card>
-          </Col>
-        </Row>
-        <Row style={{ marginTop: "24px" }}>
-          <Col span={24}>
-            <Card title="Recent Users">
-              <Table columns={columns} dataSource={data} />
-            </Card>
-          </Col>
-        </Row>
-      </Content>
-
-      <Footer style={{ textAlign: "center" }}>
-        My DashboardPage ©2024 Created with Ant Design
-      </Footer>
+    <div style={{ width: "80%", margin: "0 auto" }}>
+      <div style={{ padding: "0px" }}>
+        <h3>Chọn năm:</h3>
+        <Select
+          style={{ width: 200 }}
+          value={selectedYear}
+          onChange={handleYearChange}
+          placeholder="Chọn năm"
+        >
+          {years.map((year) => (
+            <Select.Option key={year} value={year}>
+              {year}
+            </Select.Option>
+          ))}
+        </Select>
+      </div>
+      <h2 style={{ textAlign: "center" }}>
+        Doanh thu và Số lượng đơn hàng trong năm {selectedYear}
+      </h2>
+      {chartData ? (
+        <Bar
+          data={chartData}
+          options={{
+            responsive: true,
+            plugins: {
+              legend: { display: true },
+              title: {
+                display: true,
+                text: "Biểu đồ doanh thu và số lượng đơn hàng theo tháng",
+              },
+              datalabels: {
+                display: true, // Hiển thị con số
+                color: "black", // Màu chữ cho con số
+                font: {
+                  weight: "bold",
+                },
+                formatter: (value, context) => {
+                  if (context.datasetIndex === 1) {
+                    // Làm tròn số lượng đơn hàng về số nguyên
+                    return Math.round(value); // Làm tròn số lượng đơn hàng
+                  }
+                  return value; // Đối với doanh thu, không làm tròn
+                },
+                anchor: "end", // Đặt con số ở cuối cột
+                align: "top", // Đặt con số ở trên cột
+              },
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: "Tháng",
+                },
+              },
+              y1: {
+                title: {
+                  display: true,
+                  text: "Doanh thu (VND)",
+                },
+                beginAtZero: true,
+              },
+              y2: {
+                title: {
+                  display: true,
+                  text: "Số lượng đơn hàng",
+                },
+                beginAtZero: true,
+                position: "right", // Trục y thứ hai sẽ ở bên phải
+              },
+            },
+          }}
+        />
+      ) : (
+        <p>Đang tải dữ liệu...</p>
+      )}
     </div>
   );
 };
 
-export default DashboardPage;
+export default RevenueChart;

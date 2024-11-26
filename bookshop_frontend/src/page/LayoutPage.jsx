@@ -18,6 +18,7 @@ const LayoutPage = () => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+
   return (
     <Layout style={{ minHeight: "100vh", padding: "0px" }}>
       <div
@@ -36,7 +37,7 @@ const LayoutPage = () => {
           user={user}
         />
       </div>
-      <Layout style={{ marginLeft: collapsed ? 80 : 250 }}>
+      <Layout style={{ marginLeft: collapsed ? 80 : 300 }}>
         <Header />
         <Content
           style={{

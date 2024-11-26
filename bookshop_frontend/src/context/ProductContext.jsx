@@ -1,17 +1,36 @@
+/* eslint-disable react/prop-types */
 import { createContext, useEffect, useState } from "react";
-import { getBooks } from "../api/book.api";
-import { getCart } from "../api/cart.api";
+import { getBooks, getBooksOnCategories } from "../api/book.api";
+import { addItem, getCart, removeItem, updateQuantity } from "../api/cart.api";
 import { useSelector } from "react-redux";
 
 export const ProductContext = createContext(null);
 
 const ProductContextProvider = (props) => {
-  const [cartItems, setCartItems] = useState({});
+  const [cart, setCart] = useState({});
+  const [books, setBooks] = useState([]);
+  const [total, setTotal] = useState(0);
   const [allProducts, setAllProducts] = useState([]);
   const [error, setError] = useState(null);
 
   const user = useSelector((state) => state.auth.user); // Lấy user từ Redux store
   const { _id } = user || {};
+
+  const fetchBooksOnCategory = async (categoryId) => {
+    try {
+      const response = await getBooksOnCategories(categoryId);
+
+      if (response.status) {
+        const books = response.data;
+        setBooks(books);
+        setTotal(books.length);
+      } else {
+        console.error("Error fetching books");
+      }
+    } catch (error) {
+      console.error("Error fetching books", error);
+    }
+  };
 
   const fetchCartItems = async (userId) => {
     if (!userId) {
@@ -21,8 +40,7 @@ const ProductContextProvider = (props) => {
     try {
       const response = await getCart(userId);
       if (response.status) {
-        setCartItems(response.data);
-        console.log("Cart fetched successfully", response.data);
+        setCart(response.data);
       } else {
         console.error("Error fetching cart");
       }
@@ -31,12 +49,65 @@ const ProductContextProvider = (props) => {
     }
   };
 
+  const addCart = async (bookId, quantity) => {
+    if (!_id) {
+      console.log("error");
+      return;
+    }
+
+    try {
+      const response = await addItem(bookId, user._id, quantity);
+      if (response.status) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error("Error adding to cart", error);
+      return false;
+    }
+  };
+
+  const updateCart = async (bookId, quantity) => {
+    if (!_id) {
+      console.log("error");
+      return;
+    }
+    try {
+      const response = await updateQuantity(bookId, user._id, quantity);
+      if (response.status) {
+        fetchCartItems(user._id);
+      } else {
+        console.error("Error updating cart");
+      }
+    } catch (error) {
+      console.error("Error updating cart", error);
+    }
+  };
+
+  const removeCart = async (bookId) => {
+    if (!_id) {
+      console.log("error");
+      return;
+    }
+    try {
+      const response = await removeItem(bookId, user._id);
+      if (response.status) {
+        fetchCartItems(user._id);
+      } else {
+        console.error("Error removing from cart");
+      }
+    } catch (error) {
+      console.error("Error removing from cart", error);
+    }
+  };
+
   useEffect(() => {
-    console.log("ok");
     if (_id) {
       fetchCartItems(_id);
     }
   }, [_id]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -62,10 +133,18 @@ const ProductContextProvider = (props) => {
   }, []);
 
   const contextValue = {
-    cartItems,
+    total,
+    books,
+    fetchBooksOnCategory,
+    cart,
+    addCart,
+    updateCart,
+    removeCart,
     allProducts,
     setAllProducts,
-    error, // Có thể thêm thông tin lỗi vào context nếu cần
+    error,
+    fetchCartItems,
+    _id,
   };
 
   return (

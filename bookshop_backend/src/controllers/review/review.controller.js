@@ -44,14 +44,14 @@ const createReview = async (req, res) => {
     );
   }
 };
-
 const getReviewsByBookId = async (req, res) => {
-  const { bookId } = req.params.id;
-
+  const bookId = req.params.id;
   try {
-    const reviews = await Review.find({ bookId, isDeleted: false });
+    const reviews = await Review.find({ bookId, isDeleted: false })
+      .populate("userId", "name") // Lấy thông tin `name` từ bảng User
+      .exec();
 
-    if (!reviews) {
+    if (!reviews || reviews.length === 0) {
       return response(
         res,
         StatusCodes.NOT_FOUND,
@@ -116,7 +116,7 @@ const getReviewById = async (req, res) => {
 const updateReview = async (req, res) => {
   const reviewId = req.params.id;
   const updatedReview = req.body;
-
+  console.log(reviewId, updatedReview);
   if (!updatedReview) {
     return response(
       res,
@@ -128,13 +128,13 @@ const updateReview = async (req, res) => {
   }
 
   try {
-    const updatedReview = await Review.findByIdAndUpdate(
+    const updateReview = await Review.findByIdAndUpdate(
       reviewId,
       updatedReview,
       { new: true }
     );
 
-    if (!updatedReview) {
+    if (!updateReview) {
       return response(
         res,
         StatusCodes.NOT_FOUND,
@@ -148,7 +148,7 @@ const updateReview = async (req, res) => {
       res,
       StatusCodes.OK,
       true,
-      updatedReview,
+      updateReview,
       "Review updated successfully"
     );
   } catch (error) {
@@ -168,7 +168,7 @@ const deleteReview = async (req, res) => {
   try {
     const review = await Review.findByIdAndUpdate(
       reviewId,
-      { isDeleted: false },
+      { isDeleted: true },
       { new: true }
     );
 

@@ -1,0 +1,51 @@
+.image {
+  position: relative;
+  left: 80px;
+  margin: 38px auto 0 auto;
+}
+
+.image .circle-1 {
+  position: absolute;
+  box-sizing: border-box;
+  width: 220px;
+  height: 220px;
+  top: -10px;
+  left: -10px;
+  border-width: 3px;
+  border-style: solid;
+  border-color: #522c5d #522c5d #522c5d transparent; /* Thay $brown bằng mã màu */
+  border-radius: 50%;
+  transition: all 1.5s ease-in-out;
+}
+
+.image .circle-2 {
+  position: absolute;
+  box-sizing: border-box;
+  width: 240px;
+  height: 240px;
+  top: -20px;
+  left: -20px;
+  border-width: 3px;
+  border-style: solid;
+  border-color: #522c5d transparent #522c5d #522c5d; /* Thay $brown bằng mã màu */
+  border-radius: 50%;
+  transition: all 1.5s ease-in-out;
+}
+
+.image img {
+  display: block;
+  border-radius: 50%;
+  background: #f5e8df;
+}
+
+.image:hover {
+  cursor: pointer;
+}
+
+.image:hover .circle-1 {
+  transform: rotate(360deg);
+}
+
+.image:hover .circle-2 {
+  transform: rotate(-360deg);
+}

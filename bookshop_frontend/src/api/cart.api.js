@@ -3,40 +3,38 @@ import { instance } from ".";
 const baseURL = "/cart";
 
 export const getCart = async (id) => {
-  console.log(id);
   const response = await instance.get(`${baseURL}/${id}`);
   return response;
 };
 
-export const addItem = async (book, user, quantity) => {
+export const addItem = async (bookId, userId, quantity) => {
   const response = await instance.put(`${baseURL}/add-item`, {
-    bookId: book._id,
-    userId: user._id,
+    bookId,
+    userId,
     quantity,
   });
   return response;
 };
 
-export const removeItem = async (book, user, quantity) => {
+export const removeItem = async (bookId, userId) => {
   const response = await instance.put(`${baseURL}/remove-item`, {
-    bookId: book._id,
-    userId: user._id,
-    quantity,
+    bookId,
+    userId,
   });
   return response;
 };
 
-export const deleteItem = async (book, user) => {
+export const deleteItem = async (bookId, userId) => {
   const response = await instance.delete(`${baseURL}/delete-item`, {
-    bookId: book._id,
-    userId: user._id,
+    bookId,
+    userId,
   });
   return response;
 };
-export const updateQuantity = async (book, user, quantity) => {
+export const updateQuantity = async (bookId, userId, quantity) => {
   const response = await instance.put(`${baseURL}/update`, {
-    bookId: book._id,
-    userId: user._id,
+    bookId,
+    userId,
     quantity,
   });
   return response;

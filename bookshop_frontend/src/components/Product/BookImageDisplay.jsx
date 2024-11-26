@@ -5,20 +5,28 @@ import {
   SyncOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Col, Image, InputNumber, Row } from "antd";
+import { Button, Card, Col, Image, InputNumber, Row, notification } from "antd";
 import { getSourceBookImage } from "../../utils/image";
 import PropTypes from "prop-types";
 import { useContext, useState } from "react";
 import { ProductContext } from "../../context/ProductContext";
 
 const BookImageDisplay = ({ book }) => {
-  const { cartItems } = useContext(ProductContext);
+  const { addCart } = useContext(ProductContext);
   const [quantity, setQuantity] = useState(1);
   const increment = () => {
     setQuantity((prev) => prev + 1);
   };
   const decrement = () => {
     setQuantity((prev) => (prev > 0 ? prev - 1 : prev));
+  };
+
+  const handleAddCart = (book, quantity) => {
+    addCart(book._id, quantity);
+    notification.success({
+      message: "Thêm sản phẩm vào giỏ hàng thành công",
+      description: `${quantity} "${book.title}" đã được thêm vào giỏ hàng`,
+    });
   };
   return (
     <Card
@@ -128,7 +136,9 @@ const BookImageDisplay = ({ book }) => {
           <Button
             style={{ color: "red", borderColor: "red", width: "45%" }} // Thêm width cho nút này
             size="large"
-            onClick={() => {}}
+            onClick={() => {
+              handleAddCart(book, quantity);
+            }}
           >
             Thêm vào giỏ hàng
           </Button>
@@ -241,7 +251,6 @@ BookImageDisplay.propTypes = {
     _id: PropTypes.string,
     coverPhoto: PropTypes.string,
   }).isRequired,
-  addToCart: PropTypes.func.isRequired,
 };
 
 export default BookImageDisplay;

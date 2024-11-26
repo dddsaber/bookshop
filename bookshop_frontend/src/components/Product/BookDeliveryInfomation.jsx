@@ -7,25 +7,33 @@ const BookDeliveryInfomation = () => {
   const user = useSelector((state) => state.auth.user);
   const { address } = user || {};
   return (
-    <Card style={{ marginTop: "10px" }}>
-      <Title title={"Thong tin van chuyen"} />
-      <p>
-        Giao hang den:
-        <strong>{address !== null ? address : ""}</strong>
-      </p>
-      <p>
-        <DeliveredProcedureOutlined /> <strong>Giao hang tieu chuan: </strong>
-        <br />
-        Du kien giao : Thu 2 24/02
-      </p>
-      <Title title={"Uu dai lien quan"} />
-      <Flex></Flex>
-      <span>
-        <a href="#">
-          Xem them <RightOutlined />
-        </a>
-      </span>
-    </Card>
+    <>
+      <Card style={{ margin: "20px 0" }}>
+        <Title title={"Thong tin van chuyen"} />
+        <p>
+          Giao hàng đến:
+          <strong>
+            {address !== null
+              ? `${address.province}, ${address.district}, ${address.ward}, ${address.detail}`
+              : ""}
+          </strong>
+        </p>
+        <p>
+          <DeliveredProcedureOutlined /> <strong>Giao hàng tiêu chuẩn: </strong>
+          <br />
+          Dự kiến giao:
+        </p>
+      </Card>
+      <Card style={{ margin: "10px 0" }}>
+        <Title title={"Ưu đãi liên quan"} />
+        <Flex></Flex>
+        <span>
+          <a href="#">
+            Xem thêm <RightOutlined />
+          </a>
+        </span>
+      </Card>
+    </>
   );
 };
 

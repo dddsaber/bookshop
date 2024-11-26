@@ -10,7 +10,6 @@ const BookHero = ({ books, keySearch }) => {
         .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)) // Sắp xếp theo updatedAt giảm dần
         .slice(0, 4) // Lấy 4 cuốn mới nhất
     : books.slice(0, 4); // Lấy 4 cuốn sách đầu tiên nếu không có keySearch
-  console.log(displayedBooks);
   return (
     <div>
       <Row gutter={[16, 16]} style={{ justifyContent: "space-between" }}>

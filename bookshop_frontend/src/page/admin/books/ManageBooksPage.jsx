@@ -11,6 +11,7 @@ import {
   Select,
   Space,
   Table,
+  Tag,
   Tooltip,
 } from "antd";
 import { useEffect, useState } from "react";
@@ -22,7 +23,6 @@ import {
   ReloadOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import Title from "../../../components/Title/Title";
 import {
   getCategoriesOnIds,
   getCategoriesOnParentId,
@@ -40,10 +40,9 @@ import {
   updateBook,
 } from "../../../api/book.api";
 
-const BooksPage = () => {
+const ManageBooksPage = () => {
   const [images, setImages] = useState([]);
   const [coverImage, setCoverImage] = useState(false);
-  const [form] = Form.useForm();
   const [selectedBook, setSelectedBook] = useState();
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,6 +52,7 @@ const BooksPage = () => {
   const [categoriesLv3, setCategoriesL3] = useState([]);
   const [selectedCategoriesLv1, setSelectedCategoriesLv1] = useState([]);
   const [selectedCategoriesLv2, setSelectedCategoriesLv2] = useState([]);
+  const [form] = Form.useForm();
 
   const [reload, setReload] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -61,11 +61,27 @@ const BooksPage = () => {
     current: 1,
     total: 0,
   });
+
   const [filter, setFilter] = useState({
     price_low: 0,
-    price_high: 10000000,
-    isDeleted: false,
+    price_high: 500000,
+    costPrice_low: 0,
+    costPrice_high: 500000,
+    isDeleted: [false],
   });
+
+  const handleTableChange = (pagination, filter) => {
+    setPagination(pagination);
+    setFilter(() => {
+      return {
+        isDeleted: filter.isDeleted,
+        price_low: filter.price_low,
+        price_high: filter.price_high,
+        costPrice_low: filter.costPrice_low,
+        costPrice_high: filter.costPrice_high,
+      };
+    });
+  };
 
   useEffect(() => {
     const fetchCategoryLv1 = async () => {
@@ -116,6 +132,7 @@ const BooksPage = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        console.log(filter);
         const response = await getBooks({
           searchKey: keyword,
           limit: pagination.pageSize,
@@ -123,7 +140,6 @@ const BooksPage = () => {
           ...filter,
         });
         const result = response.data;
-        console.log(result);
         setBooks(result?.books);
         setPagination({
           ...pagination,
@@ -155,6 +171,9 @@ const BooksPage = () => {
   };
   const handleEditBook = async (record) => {
     try {
+      if (!form) {
+        return;
+      }
       const updatedCategories = record.categories.map(
         (category) => category._id
       );
@@ -182,15 +201,14 @@ const BooksPage = () => {
       };
 
       setSelectedBook(updatedRecord);
-
-      // Set lại tất cả các trường trong form bao gồm cả categoriesLv1, categoriesLv2 và categories
-      form.setFieldsValue({
-        ...record,
-        categoriesLv1: categoriesLv1.map((category) => category._id),
-        categoriesLv2: categoriesLv2.map((category) => category._id),
-        categories: updatedCategories,
-      });
-
+      if (form) {
+        form.setFieldsValue({
+          ...record,
+          categoriesLv1: categoriesLv1.map((category) => category._id),
+          categoriesLv2: categoriesLv2.map((category) => category._id),
+          categories: updatedCategories,
+        });
+      }
       setIsVisible(true);
     } catch (error) {
       console.error(error);
@@ -214,7 +232,6 @@ const BooksPage = () => {
               (file) => file.image_name
             );
             setImages([]);
-            console.log(values);
           } else {
             console.error("Không có files hợp lệ trong imgResponse.data.");
           }
@@ -272,7 +289,7 @@ const BooksPage = () => {
       render: (_, __, index) => index + 1,
     },
     {
-      title: "Photo",
+      title: "Ảnh",
       dataIndex: "coverPhoto",
       key: "coverPhoto",
       width: 120,
@@ -280,7 +297,7 @@ const BooksPage = () => {
       render: (coverPhoto) => <Image src={getSourceBookImage(coverPhoto)} />,
     },
     {
-      title: "Title",
+      title: "Tiêu đề",
       dataIndex: "title",
       key: "title",
       width: 150,
@@ -293,6 +310,71 @@ const BooksPage = () => {
       key: "costPrice",
       width: 120,
       align: "right",
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
+        <div style={{ padding: 8 }}>
+          <InputNumber
+            style={{ marginBottom: 8, display: "block" }}
+            placeholder="Giá thấp nhất"
+            value={selectedKeys[0] || 0}
+            onChange={(value) => {
+              // Cập nhật giá trị thấp nhất của giá nhập
+              setSelectedKeys([value || 0, selectedKeys[1] || 500000]);
+            }}
+          />
+          <InputNumber
+            style={{ marginBottom: 8, display: "block" }}
+            placeholder="Giá cao nhất"
+            value={selectedKeys[1] || 500000}
+            onChange={(value) => {
+              // Cập nhật giá trị cao nhất của giá nhập
+              setSelectedKeys([selectedKeys[0] || 0, value || 500000]);
+            }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => {
+                // Cập nhật bộ lọc cho giá nhập
+                const [costPriceLow, costPriceHigh] = selectedKeys;
+                setFilter((prev) => ({
+                  ...prev,
+                  costPrice_low: costPriceLow || 0,
+                  costPrice_high: costPriceHigh || 500000,
+                }));
+                confirm(); // Đóng bộ lọc
+              }}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Lọc
+            </Button>
+            <Button
+              onClick={() => {
+                // Xóa bộ lọc
+                setSelectedKeys([0, 500000]);
+                setFilter((prev) => ({
+                  ...prev,
+                  costPrice_low: 0,
+                  costPrice_high: 500000,
+                }));
+                clearFilters(); // Xóa bộ lọc
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Xóa
+            </Button>
+          </Space>
+        </div>
+      ),
+      filteredValue: [filter.costPrice_low, filter.costPrice_high],
+      render: (costPrice) => costPrice.toLocaleString("vi-VN"),
     },
     {
       title: "Giá bán",
@@ -300,6 +382,71 @@ const BooksPage = () => {
       key: "price",
       width: 120,
       align: "right",
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
+        <div style={{ padding: 8 }}>
+          <InputNumber
+            style={{ marginBottom: 8, display: "block" }}
+            placeholder="Giá thấp nhất"
+            value={selectedKeys[0] || 0}
+            onChange={(value) => {
+              // Cập nhật giá trị thấp nhất của giá bán
+              setSelectedKeys([value || 0, selectedKeys[1] || 500000]);
+            }}
+          />
+          <InputNumber
+            style={{ marginBottom: 8, display: "block" }}
+            placeholder="Giá cao nhất"
+            value={selectedKeys[1] || 500000}
+            onChange={(value) => {
+              // Cập nhật giá trị cao nhất của giá bán
+              setSelectedKeys([selectedKeys[0] || 0, value || 500000]);
+            }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => {
+                // Cập nhật bộ lọc cho giá bán
+                const [priceLow, priceHigh] = selectedKeys;
+                setFilter((prev) => ({
+                  ...prev,
+                  price_low: priceLow || 0,
+                  price_high: priceHigh || 500000,
+                }));
+                confirm(); // Đóng bộ lọc
+              }}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Lọc
+            </Button>
+            <Button
+              onClick={() => {
+                // Xóa bộ lọc
+                setSelectedKeys([0, 500000]);
+                setFilter((prev) => ({
+                  ...prev,
+                  price_low: 0,
+                  price_high: 500000,
+                }));
+                clearFilters(); // Xóa bộ lọc
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Xóa
+            </Button>
+          </Space>
+        </div>
+      ),
+      filteredValue: [filter.price_low, filter.price_high],
+      render: (price) => price.toLocaleString("vi-VN"),
     },
     {
       title: "Giảm giá",
@@ -332,8 +479,13 @@ const BooksPage = () => {
       key: "authors",
       width: 150,
       align: "left",
-      ellipsis: true,
-      render: (authors) => authors.map((author) => author.name).join("\n"),
+    },
+    {
+      title: "Nhà xuất bản",
+      dataIndex: "publisher",
+      key: "publisher",
+      width: 150,
+      align: "left",
     },
     {
       title: "Giới thiệu",
@@ -356,7 +508,30 @@ const BooksPage = () => {
         </div>
       ),
     },
-
+    {
+      width: 150,
+      title: "Trạng thái",
+      dataIndex: "isDeleted",
+      key: "isDeleted",
+      filters: [
+        {
+          text: "Đang hoạt động",
+          value: false,
+        },
+        {
+          text: "Dừng hoạt động",
+          value: true,
+        },
+      ],
+      filteredValue: filter.isDeleted,
+      render: (_, { isDeleted }) => (
+        <>
+          <Tag color={!isDeleted ? "green" : "red"} key={isDeleted}>
+            {!isDeleted ? "Đang hoạt động" : "Đã khóa"}
+          </Tag>
+        </>
+      ),
+    },
     {
       title: "Hành động",
       fixed: "right",
@@ -385,9 +560,9 @@ const BooksPage = () => {
       ),
     },
   ];
+
   return (
     <div style={{ padding: "20px" }}>
-      <Title title="Manage Books" />
       <Flex gap={10} justify="space-between" style={{ marginBottom: 10 }}>
         <Flex>
           <Tooltip title="Refesh">
@@ -413,9 +588,11 @@ const BooksPage = () => {
         rowKey="_id"
         columns={columns}
         loading={loading}
+        onChange={handleTableChange}
         dataSource={books}
+        bordered
         pagination={pagination}
-        scroll={{ x: "max-content", y: 500 }}
+        scroll={{ x: "max-content", y: 435 }}
       />
       <Modal
         open={isVisible}
@@ -448,7 +625,12 @@ const BooksPage = () => {
           >
             <Input />
           </Form.Item>
-
+          <Form.Item label="Authors" name="authors">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Publisher" name="publisher">
+            <Input />
+          </Form.Item>
           <Form.Item
             label="Cost Price"
             name="costPrice"
@@ -646,7 +828,7 @@ const BooksPage = () => {
           </Form.Item>
 
           <Form.Item label="Description" name="description">
-            <Input.TextArea autoSize={{ minRows: 3, maxRows: 5 }} />
+            <Input.TextArea autoSize={{ minRows: 3, maxRows: 8 }} />
           </Form.Item>
         </Form>
         <span>Main image:</span>
@@ -658,4 +840,4 @@ const BooksPage = () => {
   );
 };
 
-export default BooksPage;
+export default ManageBooksPage;

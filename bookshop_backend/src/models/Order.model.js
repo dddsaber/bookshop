@@ -14,6 +14,9 @@ const orderSchema = mongoose.Schema(
           ref: "Book",
           required: true,
         },
+        title: {
+          type: String,
+        },
         quantity: {
           type: Number,
           required: true,
@@ -22,17 +25,36 @@ const orderSchema = mongoose.Schema(
           type: Number,
           required: true,
         },
+        discount: {
+          type: Number,
+        },
       },
     ],
-    orderDate: {
-      type: Date,
-      required: true,
-      default: Date.now,
+    address: {
+      province: {
+        type: String,
+      },
+      district: {
+        type: String,
+      },
+      ward: {
+        type: String,
+      },
+      detail: {
+        type: String,
+      },
     },
     status: {
       type: String,
       required: true,
-      enum: ["pending", "delivered", "shipped", "cancelled"],
+      enum: [
+        "pending",
+        "confirm",
+        "shipped",
+        "delivered",
+        "complete",
+        "cancelled",
+      ],
     },
     paymentMethod: {
       type: String,
@@ -42,13 +64,40 @@ const orderSchema = mongoose.Schema(
     customerNotes: {
       type: String,
     },
+    cancelNote: {
+      type: String,
+    },
     totalAmount: {
       type: Number,
       required: true,
     },
+    shippingFree: {
+      type: Number,
+      default: 0,
+    },
+    couponId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Coupon",
+    },
+    statusTimestamps: {
+      pending: { type: Date },
+      confirm: { type: Date },
+      delivered: { type: Date },
+      shipped: { type: Date },
+      complete: { type: Date },
+      cancelled: { type: Date },
+    },
   },
   { timestamps: true }
 );
+
+orderSchema.pre("save", function (next) {
+  const currentStatus = this.status;
+  if (!this.statusTimestamps[currentStatus]) {
+    this.statusTimestamps[currentStatus] = new Date();
+  }
+  next();
+});
 
 const Order = mongoose.model("Order", orderSchema);
 

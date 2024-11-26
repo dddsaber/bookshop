@@ -198,7 +198,7 @@ const getCategoriesOnParentId = async (req, res) => {
 };
 
 const getCategoriesOnIds = async (req, res) => {
-  const { Ids } = req.body;
+  const Ids = req.body;
   try {
     let categories;
     if (Array.isArray(Ids)) {

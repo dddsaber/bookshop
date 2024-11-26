@@ -31,13 +31,27 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     address: {
-      type: String,
+      province: {
+        type: String,
+      },
+      district: {
+        type: String,
+      },
+      ward: {
+        type: String,
+      },
+      detail: {
+        type: String,
+      },
     },
     userType: {
       type: String,
       required: true,
     },
     status: {
+      type: String,
+    },
+    description: {
       type: String,
     },
     isActive: {

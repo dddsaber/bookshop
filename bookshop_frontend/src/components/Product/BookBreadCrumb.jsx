@@ -1,81 +1,81 @@
 import { Breadcrumb } from "antd";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
-import { getCategoriesOnIds } from "../../api/category.api";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { CategoryContext } from "../../context/CategoryContext";
 
-const BookBreadCrumb = ({ book }) => {
-  const [category0, setCategory0] = useState({});
-  const [category1, setCategory1] = useState({});
-  const [category2, setCategory2] = useState({});
+const BookBreadCrumb = ({ categoryId }) => {
+  const { categoriesLv1, categoriesLv2, categoriesLv3, loading } =
+    useContext(CategoryContext);
 
-  const fetchCategory = async () => {
-    try {
-      // Lấy danh sách categoryIds từ book
-      let categoryIds = book.categories.map((category) => category._id);
-      categoryIds = Array.isArray(categoryIds) ? categoryIds : [categoryIds];
+  const [category1, setCategory1] = useState();
+  const [category2, setCategory2] = useState();
+  const [category3, setCategory3] = useState();
 
-      // Gọi API để lấy category dựa trên Ids
-      const response = await getCategoriesOnIds({ Ids: categoryIds });
-      setCategory0(response.data[0]);
-
-      // Kiểm tra và xử lý nếu category0 có parentId
-      if (response.data[0]?.parentId) {
-        const response1 = await getCategoriesOnIds({
-          Ids: [response.data[0].parentId], // Chuyển parentId thành mảng chứa chuỗi
-        });
-        setCategory1(response1.data[0]);
-      }
-
-      // Kiểm tra và xử lý nếu category1 có parentId
-      if (category1?.parentId) {
-        const response2 = await getCategoriesOnIds({
-          Ids: [category1.parentId], // Chuyển parentId thành mảng chứa chuỗi
-        });
-        setCategory2(response2.data[0]);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  // Sử dụng useEffect để gọi fetchCategory khi 'book' thay đổi
   useEffect(() => {
-    fetchCategory();
-  }, [book]);
+    if (categoriesLv3.some((category) => category._id === categoryId)) {
+      const foundCategory3 = categoriesLv3.find(
+        (category) => category._id === categoryId
+      );
+      setCategory3(foundCategory3);
 
-  return (
-    <>
-      <Breadcrumb separator=">">
-        <Breadcrumb.Item>
-          <Link to="/">Home</Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>
-          <Link to="/books">{category2?.name}</Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>
-          <Link to="/books">{category1?.name}</Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>
-          <Link to="/books">{category0?.name}</Link>
-        </Breadcrumb.Item>
+      if (foundCategory3) {
+        const foundCategory2 = categoriesLv2.find(
+          (category) => category._id === foundCategory3.parentId
+        );
+        setCategory2(foundCategory2);
 
-        <Breadcrumb.Item>{book.title}</Breadcrumb.Item>
-      </Breadcrumb>
-    </>
-  );
+        if (foundCategory2) {
+          const foundCategory1 = categoriesLv1.find(
+            (category) => category._id === foundCategory2.parentId
+          );
+          setCategory1(foundCategory1);
+        }
+      }
+    } else if (categoriesLv2.some((category) => category._id === categoryId)) {
+      const foundCategory2 = categoriesLv2.find(
+        (category) => category._id === categoryId
+      );
+      setCategory2(foundCategory2);
+
+      if (foundCategory2) {
+        const foundCategory1 = categoriesLv1.find(
+          (category) => category._id === foundCategory2.parentId
+        );
+        setCategory1(foundCategory1);
+      }
+    } else if (categoriesLv1.some((category) => category._id === categoryId)) {
+      const foundCategory1 = categoriesLv1.find(
+        (category) => category._id === categoryId
+      );
+      setCategory1(foundCategory1);
+    }
+  }, [categoryId, categoriesLv1, categoriesLv2, categoriesLv3]);
+
+  if (loading) {
+    return <></>;
+  }
+
+  const breadcrumbItems = [
+    {
+      title: <Link to="/">Home</Link>,
+    },
+    category1 && {
+      title: <Link to={`/category/${category1._id}`}>{category1.name}</Link>,
+    },
+    category2 && {
+      title: <Link to={`/category/${category2._id}`}>{category2.name}</Link>,
+    },
+    category3 && {
+      title: <Link to={`/category/${category3._id}`}>{category3.name}</Link>,
+    },
+  ].filter(Boolean); // Loại bỏ các giá trị `null` hoặc `undefined` khỏi mảng
+
+  return <Breadcrumb items={breadcrumbItems} separator=">" />;
 };
 
 BookBreadCrumb.propTypes = {
-  book: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    price: PropTypes.number.isRequired,
-    photos: PropTypes.arrayOf(PropTypes.string),
-    _id: PropTypes.string,
-    coverPhoto: PropTypes.string,
-    categories: PropTypes.arrayOf(PropTypes.string),
-  }).isRequired,
-  addToCart: PropTypes.func.isRequired,
+  categoryId: PropTypes.string.isRequired,
 };
 
 export default BookBreadCrumb;

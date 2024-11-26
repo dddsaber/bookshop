@@ -52,3 +52,20 @@ export const AGE_RANGE_STR = [
   { code: "u18", str: "Dưới 18 tuổi" },
   { code: "a18", str: "Hơn 18 tuổi" },
 ];
+
+export const STATUS_MAP = {
+  pending: { label: "Chờ duyệt", color: "blue" },
+  confirm: { label: "Xác nhận", color: "yellow" },
+  shipped: { label: "Đang giao", color: "orange" },
+  delivered: { label: "Đã giao hàng", color: "green" },
+  complete: { label: "Đã nhận", color: "darkgreen" },
+  cancelled: { label: "Đã hủy", color: "red" },
+};
+
+export const PAYMENT_METHOD_MAP = {
+  credit_card: "Thẻ tín dụng",
+  paypal: "PayPal",
+  cod: "Thanh toán khi nhận hàng",
+  bank_transfer: "Chuyển khoản ngân hàng",
+  cash: "Tiền mặt",
+};

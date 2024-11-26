@@ -12,6 +12,11 @@ export const getBookById = async (id) => {
   return response;
 };
 
+export const getBooksOnCategories = async (id) => {
+  const response = await instance.get(`${baseURL}/category/${id}`);
+  return response;
+};
+
 export const createBook = async (book) => {
   const response = await instance.post(`${baseURL}/`, book);
   return response;

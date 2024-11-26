@@ -35,12 +35,9 @@ const bookSchema = mongoose.Schema(
     description: {
       type: String,
     },
-    authors: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Author",
-      },
-    ],
+    authors: {
+      type: String,
+    },
     categories: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -83,8 +80,13 @@ const bookSchema = mongoose.Schema(
       type: Date,
     },
     publisher: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Publisher",
+      type: String,
+    },
+    tax: {
+      type: Number,
+      default: 0.1,
+      min: 0.0,
+      max: 1.0,
     },
     supplier: {
       type: mongoose.Schema.Types.ObjectId,

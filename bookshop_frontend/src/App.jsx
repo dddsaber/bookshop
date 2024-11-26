@@ -10,12 +10,20 @@ import LoginPage from "./page/auth/LoginPage";
 import ForgotPasswordPage from "./page/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./page/auth/ResetPasswordPage";
 import RegisterPage from "./page/auth/RegisterPage";
-import UsersPage from "./page/admin/users/UsersPage";
+import ManageUsersPage from "./page/admin/users/ManageUsersPage";
 import { TYPE_USER } from "./utils/constans";
-import BooksPage from "./page/admin/books/BooksPage";
+import ManageBooksPage from "./page/admin/books/ManageBooksPage";
 import DashboardPage from "./page/users/DashboardPage";
 import HomePage from "./page/users/HomePage";
 import BookDetailPage from "./page/users/BookDetailPage";
+import CartPage from "./page/users/CartPage";
+import ListBooksPage from "./page/users/ListBooksPage";
+import OrderPage from "./page/users/OrderPage";
+import ManageOrdersPage from "./page/admin/orders/ManageOrdersPage";
+import ProfilePage from "./page/users/ProfilePage";
+import Dashboard from "./page/admin/analysis/DashBoard";
+import Products from "./page/admin/analysis/Products";
+import MyOrdersPage from "./page/users/MyOrders";
 
 // Private Route for confirm admin
 const PrivateRoute = ({ element, requiredPermission = [] }) => {
@@ -51,7 +59,7 @@ function LogoutPage({ userId }) {
 }
 
 LogoutPage.propTypes = {
-  userId: PropTypes.string.isRequired,
+  userId: PropTypes.string,
 };
 function App() {
   const dispatch = useDispatch();
@@ -107,13 +115,16 @@ function App() {
       <Routes>
         {/* Layout  */}
         <Route path="/" element={<LayoutPage />}>
-          <Route path="/" element={<h1>Home</h1>} />
-          <Route path="/profile" element={<PrivateRoute element={<></>} />} />
+          <Route path="/" element={<HomePage />} />
+          <Route
+            path="/profile"
+            element={<PrivateRoute element={<ProfilePage />} />}
+          />
           <Route
             path="/users"
             element={
               <PrivateRoute
-                element={<UsersPage />}
+                element={<ManageUsersPage />}
                 requiredPermission={[TYPE_USER.admin]}
               />
             }
@@ -122,19 +133,38 @@ function App() {
             path="/books"
             element={
               <PrivateRoute
-                element={<BooksPage />}
+                element={<ManageBooksPage />}
+                requiredPermission={[TYPE_USER.admin]}
+              />
+            }
+          />
+
+          <Route
+            path="/orders"
+            element={
+              <PrivateRoute
+                element={<ManageOrdersPage />}
                 requiredPermission={[TYPE_USER.admin]}
               />
             }
           />
 
           <Route path="/home" element={<HomePage />} />
+          <Route path="/myorders" element={<MyOrdersPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/book" element={<BookDetailPage />}>
             <Route path=":bookId" element={<BookDetailPage />} />
           </Route>
+          <Route path="/order" element={<OrderPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/category" element={<ListBooksPage />}>
+            <Route path=":categoryId" element={<ListBooksPage />} />
+          </Route>
+          <Route path="/dash" element={<Dashboard />} />
+          <Route path="/products" element={<Products />} />
         </Route>
         <Route path="/login" element={<LoginPage />} />
+
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/logout" element={<LogoutPage userId={userId} />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />

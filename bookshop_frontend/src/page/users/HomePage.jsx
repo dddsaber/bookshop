@@ -1,86 +1,71 @@
-import { Layout, Button, Carousel, Row, Col, Card, Tabs } from "antd";
+import { Layout, Carousel, Row, Col, Card, Tabs } from "antd";
 import { useContext } from "react";
 import { ProductContext } from "../../context/ProductContext";
-import Book from "../../components/Product/Book";
-import BookHero from "../../components/Product/BookHero";
-
+import BookHero from "../../components/Product/BookHero"; // Sử dụng BookHero component
+import carousel1 from "../../assets/carousel1.jpg";
+import carousel2 from "../../assets/carousel2.jpg";
+import carousel4 from "../../assets/carousel4.jpg";
 const { Content, Footer } = Layout;
 
-const categories = [
-  "Văn học",
-  "Khoa học",
-  "Kinh tế",
-  "Thiếu nhi",
-  "Trinh thám",
-];
-
 const HomePage = () => {
-  const { allProducts, cartItems } = useContext(ProductContext);
+  const { allProducts } = useContext(ProductContext);
   const books = Array.isArray(allProducts) ? allProducts : [allProducts];
-  console.log(books);
+
+  // Hàm để lấy ngẫu nhiên 4 sách từ mảng
+  const getRandomBooks = (bookArray, count = 4) => {
+    const shuffled = [...bookArray].sort(() => 0.5 - Math.random()); // Xáo trộn mảng
+    return shuffled.slice(0, count); // Lấy 4 sách ngẫu nhiên
+  };
+
+  // Lấy 4 sách ngẫu nhiên cho mỗi tab
+  const bestSellers = getRandomBooks(books);
+  const latestBooks = getRandomBooks(books);
+
+  const tab_items = [
+    {
+      key: "1",
+      label: "Bán chạy nhất",
+      children: <BookHero books={bestSellers} />, // Truyền 4 sách ngẫu nhiên vào đây
+    },
+    {
+      key: "2",
+      label: "Sách mới nhất",
+      children: <BookHero books={latestBooks} />, // Truyền 4 sách ngẫu nhiên vào đây
+    },
+  ];
+
   return (
     <Layout>
-      {/* Banner/Carousel */}
       <Content style={{ padding: "20px 50px" }}>
         <Carousel autoplay arrows>
           <div>
-            <h3 style={carouselStyle}>Sách mới ra mắt</h3>
+            <img
+              src={carousel1}
+              alt="Sách mới ra mắt"
+              style={{ width: "100%", height: "300px", objectFit: "cover" }}
+            />
           </div>
           <div>
-            <h3 style={carouselStyle}>Giảm giá đặc biệt</h3>
+            <img
+              src={carousel2}
+              alt="Giảm giá đặc biệt"
+              style={{ width: "100%", height: "300px", objectFit: "cover" }}
+            />
           </div>
           <div>
-            <h3 style={carouselStyle}>Khuyến mãi mua 1 tặng 1</h3>
+            <img
+              src={carousel4}
+              alt="Khuyến mãi mua 1 tặng 1"
+              style={{ width: "100%", height: "300px", objectFit: "cover" }}
+            />
           </div>
         </Carousel>
 
-        {/* Categories */}
-        <div style={{ margin: "40px 0" }}>
-          <h2>Thể loại sách</h2>
-          <Row gutter={[16, 16]}>
-            {categories.map((category, index) => (
-              <Col key={index} span={4}>
-                <Button type="primary" block>
-                  {category}
-                </Button>
-              </Col>
-            ))}
-          </Row>
-        </div>
-
         {/* Featured Books */}
-        <div>
-          <h2>Sách nổi bật</h2>
-          <Row gutter={[16, 16]}>
-            {books.map((book) => (
-              <Col key={book._id} span={6}>
-                <Book book={book} />
-              </Col>
-            ))}
-          </Row>
-        </div>
 
-        {/* Best Sellers */}
-        <div style={{ marginTop: "40px" }}>
-          <h2>Sách bán chạy</h2>
-          <Row gutter={[16, 16]}>
-            {books.map((book) => (
-              <Col key={book._id} span={6}>
-                <Book book={book} />
-              </Col>
-            ))}
-          </Row>
-        </div>
-
+        {/* Best Sellers and Latest Books Tabs */}
         <Card style={{ marginTop: "20px" }}>
-          <Tabs defaultActiveKey="1">
-            <Tabs.TabPane tab="Ban chay nhat" key={1}>
-              <BookHero books={books} />
-            </Tabs.TabPane>
-            <Tabs.TabPane tab="Sach moi nhat" key={2}>
-              <BookHero books={books} keySearch={"Date"} />
-            </Tabs.TabPane>
-          </Tabs>
+          <Tabs defaultActiveKey="1" items={tab_items} />
         </Card>
       </Content>
 
@@ -90,16 +75,6 @@ const HomePage = () => {
       </Footer>
     </Layout>
   );
-};
-
-// Styles
-const carouselStyle = {
-  height: "300px",
-  color: "#fff",
-  lineHeight: "300px",
-  textAlign: "center",
-  background: "#364d79",
-  fontSize: "24px",
 };
 
 export default HomePage;

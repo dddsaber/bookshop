@@ -6,14 +6,20 @@ const {
   getOrderDetail,
   updateOrderStatus,
   updateOrder,
-  deleteOrder,
+  getOrderStats,
+  getRevenueByDay,
+  getRevenueByMonth,
+  getRevenueByYear,
+  calculateMonthlyConversionRate,
+  getTopSellingBooks,
+  getOrdersByUserId,
 } = require("../controllers/order/order.controller");
 
 const router = Router();
 
 router.post("/", createOrder);
 
-router.get("/get-orders", getOrders);
+router.post("/get-orders", getOrders);
 
 router.get("/:id", getOrderDetail);
 
@@ -23,6 +29,18 @@ router.put("/cancel-order/:id", cancelOrder);
 
 router.put("/update/:id", updateOrder);
 
-router.delete("/delete/:id", deleteOrder);
+router.post("/stats", getOrderStats);
+
+router.post("/revenue/day", getRevenueByDay);
+
+router.post("/revenue/month", getRevenueByMonth);
+
+router.post("/revenue/year", getRevenueByYear);
+
+router.post("/conversion-rate", calculateMonthlyConversionRate);
+
+router.post("/top-selling-books/:id", getTopSellingBooks);
+
+router.post("/orders-by-user/:id", getOrdersByUserId);
 
 module.exports = router;

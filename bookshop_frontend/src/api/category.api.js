@@ -33,6 +33,7 @@ export const getCategoriesOnParentId = async (body) => {
 };
 
 export const getCategoriesOnIds = async (body) => {
+  console.log(body);
   const response = await instance.post(
     `${baseURL}/get-categories-on-ids`,
     body

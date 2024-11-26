@@ -14,7 +14,6 @@ import {
   Tag,
   Tooltip,
 } from "antd";
-import Title from "../../../components/Title/Title";
 import {
   EditOutlined,
   LockOutlined,
@@ -35,7 +34,7 @@ import dayjs from "dayjs";
 import { uploadFileUser } from "../../../api/file.api";
 import { getSourceUserImage } from "../../../utils/image";
 
-const UsersPage = () => {
+const ManageUsersPage = () => {
   const handleTableChange = (pagination, filter) => {
     setPagination(pagination);
     setFilter(() => {
@@ -324,7 +323,6 @@ const UsersPage = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <Title title="Manage Accounts" />
       <Flex gap={10} justify="space-between" style={{ marginBottom: 10 }}>
         <Flex>
           <Tooltip title="Refesh">
@@ -352,12 +350,13 @@ const UsersPage = () => {
       </Flex>
       <Table
         rowKey={"_id"}
+        bordered
         loading={loading}
         columns={columns}
         dataSource={users}
         pagination={pagination}
         onChange={handleTableChange}
-        scroll={{ x: "max-content", y: 500 }}
+        scroll={{ x: "max-content", y: 435 }}
       />
       <Modal
         open={isVisible}
@@ -443,4 +442,4 @@ const UsersPage = () => {
   );
 };
 
-export default UsersPage;
+export default ManageUsersPage;

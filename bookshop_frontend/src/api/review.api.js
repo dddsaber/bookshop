@@ -1,8 +1,8 @@
 import { instance } from ".";
 const baseURL = "/review";
 
-export const getReviewsByBookId = async (book) => {
-  const response = await instance.get(`${baseURL}/book/${book._id}`);
+export const getReviewsByBookId = async (bookId) => {
+  const response = await instance.get(`${baseURL}/book/${bookId}`);
   return response;
 };
 

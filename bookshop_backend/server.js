@@ -8,12 +8,13 @@ const bodyParser = require("body-parser");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const { CreateChat } = require("./src/controllers/chat/chat.controller");
+const logVisit = require("./src/controllers/visit.controller");
 
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
+app.use(logVisit);
 app.use(
   cors({
     origin: "*",
@@ -35,7 +36,7 @@ const userRouter = require("./src/routers/user.routes");
 const conversationRouter = require("./src/routers/conversation.routes");
 const chatRouter = require("./src/routers/chat.routes");
 const fileRouter = require("./src/routers/file.routes");
-
+const couponRouter = require("./src/routers/coupon.routes");
 app.use("/auth", authRouter);
 
 app.use("/author", authorRouter);
@@ -57,6 +58,8 @@ app.use("/publisher", publisherRouter);
 app.use("/review", reviewRouter);
 
 app.use("/user", userRouter);
+
+app.use("/coupon", couponRouter);
 
 app.use("/conversation", conversationRouter);
 

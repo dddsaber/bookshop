@@ -1,5 +1,5 @@
-import { Breadcrumb, Row, Col, Card, Rate, Layout, Flex, Table } from "antd";
-import { Link, useParams } from "react-router-dom";
+import { Row, Col, Card, Rate, Layout, Flex, Table } from "antd";
+import { useParams } from "react-router-dom";
 import { useContext } from "react";
 import { ProductContext } from "../../context/ProductContext";
 
@@ -10,20 +10,20 @@ import { StarOutlined } from "@ant-design/icons";
 import Book from "../../components/Product/Book";
 import BookReview from "../../components/Product/BookReview";
 import BookBreadCrumb from "../../components/Product/BookBreadCrumb";
+import LoadingPage from "../sub_pages/LoadingPage";
 
 const BookDetailPage = () => {
   const { allProducts } = useContext(ProductContext);
   const books = Array.isArray(allProducts) ? allProducts : [allProducts];
   const { bookId } = useParams();
   if (!books.length) {
-    return <div>Loading...</div>; // Hiển thị thông báo đang tải
+    return <LoadingPage />; // Hiển thị thông báo đang tải
   }
   const book = books.find((book) => book._id === bookId);
-  const addToCart = () => {};
+
   const relatedBooks = books;
 
   const reviews = [];
-  console.log(book, relatedBooks);
   const columns = [
     {
       title: "",
@@ -75,7 +75,7 @@ const BookDetailPage = () => {
     <Layout>
       <div style={{ padding: "20px" }}>
         {/* Breadcrumbs */}
-        <BookBreadCrumb book={book} />
+        <BookBreadCrumb categoryId={book.categories[0]._id} />
 
         <Row gutter={[12, 12]} style={{ marginTop: "15px" }}>
           <Col span={10} style={{ position: "sticky" }}>
@@ -85,31 +85,7 @@ const BookDetailPage = () => {
           <Col span={14} style={{ overflowY: "auto" }}>
             <Card>
               <Title title={book.title} styles={{ paddingLeft: "10px" }} />
-              <Flex style={{ flexDirection: "column" }}>
-                <div
-                  style={{ display: "flex", padding: "0 20px", margin: "0px" }}
-                >
-                  <p style={{ flex: 1 }}>Nhà cung cấp: ABC</p>
-                  <p>Nhà cung cấp: ABC</p>
-                </div>
-                <div
-                  style={{ display: "flex", padding: "0 20px", margin: "0px" }}
-                >
-                  <p style={{ flex: 1 }}>Nhà cung cấp: ABC</p>
-                  <p>Nhà cung cấp: ABC</p>
-                </div>
-              </Flex>
-              <div className="productdisplay-right-stars">
-                <div style={{ padding: "5px 20px" }}>
-                  <StarOutlined />
-                  <StarOutlined />
-                  <StarOutlined />
-                  <StarOutlined />
-                  <StarOutlined /> ( 10 quanh gia ){" "}
-                  <span style={{ padding: "0 20px" }}>|</span>{" "}
-                  <span>Da ban: 0</span>
-                </div>
-              </div>
+
               <p style={{ margin: 0, padding: 20 }}>Kho : {book.quantity}</p>
               <p
                 style={{
@@ -119,7 +95,22 @@ const BookDetailPage = () => {
                   paddingLeft: 20,
                 }}
               >
-                {book.price} đ
+                {book.discount !== 0 ? (
+                  <>
+                    {(book.price * (1 - book.discount)).toLocaleString()} đ
+                    <del
+                      style={{
+                        marginLeft: "10px",
+                        color: "gray",
+                        fontSize: "26px",
+                      }}
+                    >
+                      {book.price.toLocaleString()} đ
+                    </del>
+                  </>
+                ) : (
+                  <>{book.price.toLocaleString()} đ</>
+                )}
               </p>
             </Card>
             <BookDeliveryInfomation />
@@ -129,7 +120,7 @@ const BookDetailPage = () => {
           <Col span={24}>
             <Card style={{ marginTop: "10px" }}>
               <Title
-                title={"Thong tin chi tiet"}
+                title={"Thông tin chi tiết"}
                 styles={{ paddingLeft: "10px" }}
               />
               <Table
@@ -155,14 +146,14 @@ const BookDetailPage = () => {
             <Card style={{ margin: "15px 0" }}>
               <Title title={"Mo ta san pham"} />
               <p>
-                {book.description !== null
+                {book?.description && book.description.trim().length > 0
                   ? book.description.split("\n").map((line, index) => (
                       <span key={index}>
                         {line}
                         <br />
                       </span>
                     ))
-                  : ""}
+                  : "Không có mô tả cho sản phẩm này"}
               </p>
             </Card>
           </Col>
@@ -203,7 +194,7 @@ const BookDetailPage = () => {
         </Row>
         <Row gutter={[16, 16]} style={{ marginTop: "15px" }}>
           <Col span={24}>
-            <BookReview />
+            <BookReview bookId={bookId} />
           </Col>
         </Row>
       </div>

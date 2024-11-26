@@ -1,30 +1,62 @@
-import { Card, Button } from "antd";
+import { Card, Button, notification } from "antd";
 import PropTypes from "prop-types";
 import { getSourceBookImage } from "../../utils/image";
 
 import { Link } from "react-router-dom";
+import { useContext } from "react";
+import { ProductContext } from "../../context/ProductContext";
 
-const Book = ({ book, addToCart }) => {
+const Book = ({ book }) => {
+  const { addCart } = useContext(ProductContext);
+  const handleAddCart = async (book, quantity) => {
+    const status = await addCart(book._id, quantity);
+    if (status)
+      notification.success({
+        message: "Thêm sản phẩm vào giỏ hàng thành công",
+        description: `${quantity} ${book.title} đã được thêm vào giỏ hàng`,
+      });
+  };
   return (
     <Card
       style={{ textAlign: "center", paddingTop: "15px" }}
       hoverable
       cover={
-        <Link to={`/book/${book._id}`}>
+        <Link to={`/book/${book._id}`} onClick={() => window.scrollTo(0, 0)}>
           <img
-            style={{ width: 200, margin: 3 }}
+            style={{ width: 160, margin: 3 }}
             alt={book.title}
             src={getSourceBookImage(book.coverPhoto)}
-            onClick={window.scrollTo(0, 0)}
           />
         </Link>
       }
     >
-      <Card.Meta title={book.title} description={`${book.price} VND`} />
+      <Card.Meta
+        title={book.title}
+        description={
+          book.discount !== 0 ? (
+            <>
+              {(book.price * (1 - book.discount)).toLocaleString()} đ
+              <del
+                style={{
+                  marginLeft: "10px",
+                  color: "gray",
+                }}
+              >
+                {book.price.toLocaleString()} đ
+              </del>
+            </>
+          ) : (
+            <>{book.price.toLocaleString()} đ</>
+          )
+        }
+      />
       <Button
         type="primary"
         style={{ marginTop: "10px" }}
-        onClick={() => addToCart(book)}
+        onClick={(e) => {
+          e.preventDefault();
+          handleAddCart(book, 1);
+        }}
       >
         Thêm vào giỏ
       </Button>
@@ -37,10 +69,10 @@ Book.propTypes = {
     title: PropTypes.string.isRequired,
     price: PropTypes.number.isRequired,
     photos: PropTypes.arrayOf(PropTypes.string),
+    discount: PropTypes.number,
     _id: PropTypes.string,
     coverPhoto: PropTypes.string,
   }).isRequired,
-  addToCart: PropTypes.func.isRequired,
 };
 
 export default Book;
