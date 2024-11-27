@@ -1,10 +1,18 @@
 import { useEffect } from "react";
 import "./App.css";
 import { useDispatch, useSelector } from "react-redux";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { Spin, notification } from "antd";
 import { logoutAuth, reloginAuth } from "./redux/slices/authSlice";
 import PropTypes from "prop-types";
+import { AnimatePresence, motion } from "framer-motion";
+
 import LayoutPage from "./page/LayoutPage";
 import LoginPage from "./page/auth/LoginPage";
 import ForgotPasswordPage from "./page/auth/ForgotPasswordPage";
@@ -24,6 +32,7 @@ import ProfilePage from "./page/users/ProfilePage";
 import Dashboard from "./page/admin/analysis/DashBoard";
 import Products from "./page/admin/analysis/Products";
 import MyOrdersPage from "./page/users/MyOrders";
+import CouponPage from "./page/admin/coupons/ManageCouponsPage";
 
 // Private Route for confirm admin
 const PrivateRoute = ({ element, requiredPermission = [] }) => {
@@ -43,9 +52,10 @@ const PrivateRoute = ({ element, requiredPermission = [] }) => {
   );
 };
 PrivateRoute.propTypes = {
-  element: PropTypes.element.isRequired, // Kiểm tra rằng element là React element
-  requiredPermission: PropTypes.arrayOf(PropTypes.string), // Kiểm tra mảng các quyền là mảng chuỗi
+  element: PropTypes.element.isRequired,
+  requiredPermission: PropTypes.arrayOf(PropTypes.string),
 };
+
 function LogoutPage({ userId }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -53,7 +63,7 @@ function LogoutPage({ userId }) {
   useEffect(() => {
     dispatch(logoutAuth(userId));
     navigate("/login", { replace: true });
-  }, []);
+  }, [dispatch, navigate, userId]);
 
   return <Spin fullscreen />;
 }
@@ -61,25 +71,30 @@ function LogoutPage({ userId }) {
 LogoutPage.propTypes = {
   userId: PropTypes.string,
 };
+
+const pageTransition = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+  transition: { duration: 0.3 },
+};
+
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const name = useSelector((state) => state.auth?.user?.name);
   const userId = useSelector((state) => state.auth?.user?._id);
 
   useEffect(() => {
-    const token = localStorage.getItem("token"); // accessToken
-    const refreshToken = localStorage.getItem("refreshToken"); // refreshToken
+    const token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken");
     const path = window.location.pathname;
 
-    // Nếu không có userId và có accessToken, đăng nhập lại
     if (!userId && refreshToken) {
       dispatch(reloginAuth({ refreshToken }));
-    }
-    // Nếu không có accessToken
-    else if (!token) {
-      // Nếu không có refreshToken, chuyển hướng đến trang login
+    } else if (!token) {
       if (!refreshToken) {
         const allowedPaths = [
           "/login",
@@ -87,13 +102,10 @@ function App() {
           "/forgot-password",
           "/change-password",
         ];
-
-        // Chỉ cho phép truy cập vào các đường dẫn này
         if (!allowedPaths.some((p) => path.startsWith(p))) {
           navigate("/login", { replace: true });
         }
       } else {
-        // Nếu có refreshToken, thử sử dụng nó để lấy accessToken
         dispatch(reloginAuth({ refreshToken }));
       }
     }
@@ -111,20 +123,52 @@ function App() {
   }, [userId, name, navigate]);
 
   return (
-    <>
-      <Routes>
-        {/* Layout  */}
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Layout */}
         <Route path="/" element={<LayoutPage />}>
-          <Route path="/" element={<HomePage />} />
+          <Route
+            path="/"
+            element={
+              <motion.div {...pageTransition}>
+                <HomePage />
+              </motion.div>
+            }
+          />
           <Route
             path="/profile"
-            element={<PrivateRoute element={<ProfilePage />} />}
+            element={
+              <PrivateRoute
+                element={
+                  <motion.div {...pageTransition}>
+                    <ProfilePage />
+                  </motion.div>
+                }
+              />
+            }
           />
           <Route
             path="/users"
             element={
               <PrivateRoute
-                element={<ManageUsersPage />}
+                element={
+                  <motion.div {...pageTransition}>
+                    <ManageUsersPage />
+                  </motion.div>
+                }
+                requiredPermission={[TYPE_USER.admin]}
+              />
+            }
+          />
+          <Route
+            path="/coupons"
+            element={
+              <PrivateRoute
+                element={
+                  <motion.div {...pageTransition}>
+                    <CouponPage />
+                  </motion.div>
+                }
                 requiredPermission={[TYPE_USER.admin]}
               />
             }
@@ -133,46 +177,143 @@ function App() {
             path="/books"
             element={
               <PrivateRoute
-                element={<ManageBooksPage />}
+                element={
+                  <motion.div {...pageTransition}>
+                    <ManageBooksPage />
+                  </motion.div>
+                }
                 requiredPermission={[TYPE_USER.admin]}
               />
             }
           />
-
           <Route
             path="/orders"
             element={
               <PrivateRoute
-                element={<ManageOrdersPage />}
+                element={
+                  <motion.div {...pageTransition}>
+                    <ManageOrdersPage />
+                  </motion.div>
+                }
                 requiredPermission={[TYPE_USER.admin]}
               />
             }
           />
-
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/myorders" element={<MyOrdersPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/book" element={<BookDetailPage />}>
-            <Route path=":bookId" element={<BookDetailPage />} />
-          </Route>
-          <Route path="/order" element={<OrderPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/category" element={<ListBooksPage />}>
-            <Route path=":categoryId" element={<ListBooksPage />} />
-          </Route>
-          <Route path="/dash" element={<Dashboard />} />
-          <Route path="/products" element={<Products />} />
+          <Route
+            path="/home"
+            element={
+              <motion.div {...pageTransition}>
+                <HomePage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/myorders"
+            element={
+              <motion.div {...pageTransition}>
+                <MyOrdersPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <motion.div {...pageTransition}>
+                <DashboardPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/book/:bookId"
+            element={
+              <motion.div {...pageTransition}>
+                <BookDetailPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <motion.div {...pageTransition}>
+                <CartPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/order"
+            element={
+              <motion.div {...pageTransition}>
+                <OrderPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/category/:categoryId"
+            element={
+              <motion.div {...pageTransition}>
+                <ListBooksPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/dash"
+            element={
+              <motion.div {...pageTransition}>
+                <Dashboard />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/products"
+            element={
+              <motion.div {...pageTransition}>
+                <Products />
+              </motion.div>
+            }
+          />
         </Route>
-        <Route path="/login" element={<LoginPage />} />
-
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/logout" element={<LogoutPage userId={userId} />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/change-password" element={<ResetPasswordPage />}>
-          <Route path=":userId" element={<ResetPasswordPage />} />
-        </Route>
+        <Route
+          path="/login"
+          element={
+            <motion.div {...pageTransition}>
+              <LoginPage />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <motion.div {...pageTransition}>
+              <RegisterPage />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/logout"
+          element={
+            <motion.div {...pageTransition}>
+              <LogoutPage userId={userId} />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <motion.div {...pageTransition}>
+              <ForgotPasswordPage />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/change-password/:userId"
+          element={
+            <motion.div {...pageTransition}>
+              <ResetPasswordPage />
+            </motion.div>
+          }
+        />
       </Routes>
-    </>
+    </AnimatePresence>
   );
 }
 

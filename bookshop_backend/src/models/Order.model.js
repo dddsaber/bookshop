@@ -71,7 +71,11 @@ const orderSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
-    shippingFree: {
+    distance: {
+      type: Number,
+      default: 0,
+    },
+    shippingFee: {
       type: Number,
       default: 0,
     },
@@ -86,6 +90,14 @@ const orderSchema = mongoose.Schema(
       shipped: { type: Date },
       complete: { type: Date },
       cancelled: { type: Date },
+    },
+    isNotice: {
+      type: Boolean,
+      default: false,
+      required: true,
+    },
+    notice: {
+      type: String,
     },
   },
   { timestamps: true }

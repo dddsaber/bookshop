@@ -89,7 +89,6 @@ const verifyToken = async (token) => {
       return;
     }
   } catch (error) {
-    console.log(error.message);
     return;
   }
 };

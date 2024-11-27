@@ -4,9 +4,8 @@ const Coupon = require("../../models/Coupon.model");
 
 // Tạo mới coupon
 const createCoupon = async (req, res) => {
-  const { type, percent, flat } = req.body;
-
-  if (!type || !percent || !flat) {
+  const { type, percent, flat, expiryDate } = req.body;
+  if (!type || percent === null || flat === null) {
     return response(
       res,
       StatusCodes.BAD_REQUEST,
@@ -17,7 +16,12 @@ const createCoupon = async (req, res) => {
   }
 
   try {
-    const newCoupon = await Coupon.create({ type, percent, flat });
+    const newCoupon = await Coupon.create({
+      type,
+      percent,
+      flat,
+      expiryDate: expiryDate,
+    });
 
     if (!newCoupon) {
       return response(
@@ -136,7 +140,7 @@ const getCouponById = async (req, res) => {
 // Lấy danh sách coupon
 const getCoupons = async (req, res) => {
   try {
-    const coupons = await Coupon.find();
+    const coupons = await Coupon.find({ isDeleted: false });
 
     if (!coupons || coupons.length === 0) {
       return response(
@@ -161,7 +165,41 @@ const getCoupons = async (req, res) => {
       StatusCodes.INTERNAL_SERVER_ERROR,
       false,
       {},
-      "Error retrieving coupons"
+      `${error.message}`
+    );
+  }
+};
+
+const getCouponsForManage = async (req, res) => {
+  console.log("ok");
+
+  try {
+    const coupons = await Coupon.find();
+    console.log("coupons");
+    if (!coupons || coupons.length === 0) {
+      return response(
+        res,
+        StatusCodes.NOT_FOUND,
+        false,
+        {},
+        "No coupons found"
+      );
+    }
+
+    return response(
+      res,
+      StatusCodes.OK,
+      true,
+      coupons,
+      "Coupons retrieved successfully"
+    );
+  } catch (error) {
+    return response(
+      res,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      false,
+      {},
+      `${error.message}`
     );
   }
 };
@@ -169,7 +207,7 @@ const getCoupons = async (req, res) => {
 // Xóa coupon
 const deleteCoupon = async (req, res) => {
   const couponId = req.params.id;
-
+  console.log(couponId);
   try {
     const deletedCoupon = await Coupon.findByIdAndUpdate(
       couponId,
@@ -179,6 +217,7 @@ const deleteCoupon = async (req, res) => {
       { new: true }
     );
 
+    console.log(deletedCoupon);
     if (!deletedCoupon) {
       return response(
         res,
@@ -191,7 +230,7 @@ const deleteCoupon = async (req, res) => {
 
     return response(
       res,
-      StatusCodes.NO_CONTENT,
+      StatusCodes.OK,
       true,
       {},
       "Coupon deleted successfully"
@@ -213,4 +252,5 @@ module.exports = {
   getCouponById,
   getCoupons,
   deleteCoupon,
+  getCouponsForManage,
 };

@@ -51,7 +51,7 @@ const getReviewsByBookId = async (req, res) => {
       .populate("userId", "name") // Lấy thông tin `name` từ bảng User
       .exec();
 
-    if (!reviews || reviews.length === 0) {
+    if (!reviews) {
       return response(
         res,
         StatusCodes.NOT_FOUND,

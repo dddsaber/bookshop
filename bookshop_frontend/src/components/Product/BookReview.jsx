@@ -71,7 +71,8 @@ const BookReview = ({ bookId }) => {
         totalReviews,
       });
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching reviews", error);
+      return;
     }
   };
 

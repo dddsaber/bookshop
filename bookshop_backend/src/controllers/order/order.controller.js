@@ -2,16 +2,34 @@ const { StatusCodes } = require("http-status-codes");
 const { response } = require("../../utils/response");
 const { Order } = require("../../models/Order.model");
 const { Cart } = require("../../models/Cart.model");
-const { ORDER_STATUS, PAYMENT_METHODS } = require("../../utils/constants");
+const {
+  ORDER_STATUS,
+  PAYMENT_METHODS,
+  STATUS_MAP,
+} = require("../../utils/constants");
 const { Book } = require("../../models/Book.model");
 const { Invoice } = require("../../models/Invoice.model");
 const Visit = require("../../models/Visit.model");
+const Coupon = require("../../models/Coupon.model");
 const createOrder = async (req, res) => {
-  const { userId, paymentMethod, orderDetails, shippingFee, ...objOrder } =
-    req.body;
+  const {
+    userId,
+    paymentMethod,
+    orderDetails,
+    shippingFee,
+    address,
+    couponId,
+    ...objOrder
+  } = req.body;
 
   // Kiểm tra tính hợp lệ của dữ liệu đầu vào
-  if (!userId || !orderDetails || orderDetails.length === 0 || !paymentMethod) {
+  if (
+    !userId ||
+    !orderDetails ||
+    orderDetails.length === 0 ||
+    !address ||
+    !paymentMethod
+  ) {
     return response(
       res,
       StatusCodes.BAD_REQUEST,
@@ -83,13 +101,42 @@ const createOrder = async (req, res) => {
 
       // Tính tổng số tiền
       totalAmount +=
-        book.price *
-        orderDetails[i].quantity *
-        (1 - (orderDetails[i].discount + book.tax ? book.tax : 0));
+        book.price * orderDetails[i].quantity * (1 - orderDetails[i].discount);
 
       // Cập nhật số lượng sách sau khi tạo đơn hàng thành công
       book.quantity -= orderDetails[i].quantity;
       books.push(book);
+    }
+
+    if (couponId) {
+      const coupon = await Coupon.findById(couponId);
+      if (!coupon || coupon.isDeleted) {
+        return response(
+          res,
+          StatusCodes.NOT_FOUND,
+          false,
+          {},
+          "Mã coupon không tồn tại"
+        );
+      }
+      if (coupon.expiryDate < new Date()) {
+        return response(
+          res,
+          StatusCodes.BAD_REQUEST,
+          false,
+          {},
+          "Mã coupon đã hết hạn"
+        );
+      }
+      if (coupon.percent) {
+        totalAmount = totalAmount * (1 - coupon.percent / 100);
+      }
+      if (coupon.flat) {
+        totalAmount = totalAmount - coupon.flat;
+        if (totalAmount < 0) {
+          totalAmount = 0;
+        }
+      }
     }
 
     totalAmount += shippingFee ? shippingFee : 0;
@@ -100,6 +147,8 @@ const createOrder = async (req, res) => {
       orderDetails,
       paymentMethod,
       totalAmount,
+      shippingFee: shippingFee,
+      address,
       status: ORDER_STATUS.pending,
       ...objOrder,
     });
@@ -196,6 +245,8 @@ const cancelOrder = async (req, res) => {
     // Cập nhật trạng thái đơn hàng thành 'cancelled'
     order.status = ORDER_STATUS.cancelled;
     order.cancelNote = cancelNote;
+    order.isNotice = true;
+    order.notice = `Đơn hàng ${order._id} đã bị hủy với lí do: ${order.cancelNote}`;
     await order.save();
 
     // Lưu các thay đổi về số lượng sách trong cơ sở dữ liệu
@@ -225,7 +276,6 @@ const cancelOrder = async (req, res) => {
 const getOrders = async (req, res) => {
   const { userId, status, paymentMethod, limit, sortBy, searchKey, skip } =
     req.body;
-
   try {
     // Tính tổng số đơn hàng
     const total = await Order.countDocuments()
@@ -367,6 +417,8 @@ const updateOrderStatus = async (req, res) => {
     if (updateOrder.status !== ORDER_STATUS.cancelled) {
       updateOrder.status = status;
     }
+    updateOrder.isNotice = true;
+    updateOrder.notice = `Đơn hàng ${orderId} đã thay đổi trạng thái thành ${STATUS_MAP[status].label}`;
     await updateOrder.save();
 
     if (!updateOrder) {
@@ -478,7 +530,7 @@ const getRevenueByDay = async (req, res) => {
       {
         $group: {
           _id: { day: { $dayOfMonth: "$createdAt" } }, // Nhóm theo ngày trong tháng
-          totalRevenue: { $sum: "$totalAmount" }, // Tổng doanh thu
+          totalRevenue: { $sum: { $multiply: ["$totalAmount", 0.9] } },
           orderCount: { $sum: 1 }, // Số lượng đơn hàng
         },
       },
@@ -542,7 +594,7 @@ const getRevenueByMonth = async (req, res) => {
       {
         $group: {
           _id: { month: { $month: "$createdAt" } }, // Nhóm theo tháng
-          totalRevenue: { $sum: "$totalAmount" }, // Tổng doanh thu
+          totalRevenue: { $sum: { $multiply: ["$totalAmount", 0.9] } },
           orderCount: { $sum: 1 }, // Số lượng đơn hàng
         },
       },
@@ -608,7 +660,7 @@ const getRevenueByYear = async (req, res) => {
       {
         $group: {
           _id: { year: { $year: "$createdAt" } }, // Nhóm theo năm
-          totalRevenue: { $sum: "$totalAmount" }, // Tổng doanh thu trong năm
+          totalRevenue: { $sum: { $multiply: ["$totalAmount", 0.9] } },
           orderCount: { $sum: 1 }, // Số lượng đơn hàng trong năm
         },
       },
@@ -761,7 +813,8 @@ const getTopSellingBooks = async (req, res) => {
 
 const getOrdersByUserId = async (req, res) => {
   const { id } = req.params; // Lấy userId từ req.params.id
-  const { status, paymentMethod, limit, sortBy, searchKey, skip } = req.body;
+  const { status, isNotice, paymentMethod, limit, sortBy, searchKey, skip } =
+    req.body;
 
   try {
     const orders = await Order.find()
@@ -775,6 +828,7 @@ const getOrdersByUserId = async (req, res) => {
       .where({ userId: id }) // Lọc theo userId từ params
       .where(status ? { status } : null)
       .where(paymentMethod ? { paymentMethod } : null)
+      .where(isNotice ? { isNotice } : null)
       .limit(limit ? limit : null)
       .skip(skip ? skip : null)
       .sort(sortBy ? { [sortBy.field]: sortBy.order } : { createdAt: -1 })
@@ -786,13 +840,42 @@ const getOrdersByUserId = async (req, res) => {
         path: "orderDetails.bookId", // Populated từ bookId trong orderDetails
         select: "coverPhoto", // Chọn các trường cần thiết từ sách (ví dụ: title, author, price)
       });
-
     return response(
       res,
       StatusCodes.OK,
       true,
       { orders },
       "Orders fetched successfully"
+    );
+  } catch (error) {
+    return response(
+      res,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      false,
+      {},
+      error.message
+    );
+  }
+};
+
+const turnOffNotice = async (req, res) => {
+  const orderId = req.params.id;
+
+  try {
+    const order = await Order.findByIdAndUpdate(
+      orderId,
+      { isNotice: false },
+      { new: true }
+    );
+    if (!order) {
+      return response(res, StatusCodes.NOT_FOUND, false, {}, "Order not found");
+    }
+    return response(
+      res,
+      StatusCodes.OK,
+      true,
+      { order },
+      "Order notice turned off successfully"
     );
   } catch (error) {
     return response(
@@ -819,4 +902,5 @@ module.exports = {
   calculateMonthlyConversionRate,
   getTopSellingBooks,
   getOrdersByUserId,
+  turnOffNotice,
 };

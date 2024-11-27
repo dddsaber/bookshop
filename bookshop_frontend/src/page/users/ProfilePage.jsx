@@ -12,6 +12,7 @@ import {
   DatePicker,
   notification,
   Modal,
+  Layout,
 } from "antd";
 import { useState } from "react";
 import dayjs from "dayjs";
@@ -97,7 +98,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <Layout style={{ padding: "20px", minHeight: "100vh" }}>
       <Card>
         {!isEditing ? (
           <div>
@@ -285,7 +286,7 @@ const ProfilePage = () => {
           </Form>
         )}
       </Card>
-    </div>
+    </Layout>
   );
 };
 

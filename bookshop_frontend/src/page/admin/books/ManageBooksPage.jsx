@@ -592,7 +592,7 @@ const ManageBooksPage = () => {
         dataSource={books}
         bordered
         pagination={pagination}
-        scroll={{ x: "max-content", y: 435 }}
+        scroll={{ x: "max-content" }}
       />
       <Modal
         open={isVisible}

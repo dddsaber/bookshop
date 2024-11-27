@@ -1,14 +1,15 @@
-import { Flex, Input, Select } from "antd";
+import { Flex, Input, Select, Skeleton } from "antd";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
+// API fetch all provinces
 export const getAllProvice = async () => {
   const response = await fetch(
     `https://vn-public-apis.fpo.vn/provinces/getAll?limit=-1`
   );
   let data = await response.json();
-  return data.data.data || []; // Trả về dữ liệu tỉnh/thành phố nếu có, nếu không trả về mảng rỗng
+  return data.data.data || []; // Return provinces data
 };
 
 const AddressComponent = ({ sendData }) => {
@@ -16,9 +17,9 @@ const AddressComponent = ({ sendData }) => {
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
-  const [selectedProvince, setselectedProvince] = useState();
-  const [selectedDistrict, setSelectedDistrict] = useState();
-  const [selectedWard, setSelectedWard] = useState();
+  const [selectedProvince, setselectedProvince] = useState(null);
+  const [selectedDistrict, setSelectedDistrict] = useState(null);
+  const [selectedWard, setSelectedWard] = useState(null);
   const [detail, setDetail] = useState("");
   const [address, setAddress] = useState({
     province: "",
@@ -28,6 +29,7 @@ const AddressComponent = ({ sendData }) => {
   });
   const user = useSelector((state) => state.auth?.user);
 
+  // Fetch province data
   useEffect(() => {
     const fetchProvince = async () => {
       setLoading(true);
@@ -46,10 +48,12 @@ const AddressComponent = ({ sendData }) => {
 
   // Fetch districts based on selected province
   useEffect(() => {
+    setSelectedDistrict(null);
+    setSelectedWard(null);
     const fetchDistrict = async (provinceCode) => {
       setLoading(true);
-      setDistricts([]);
-      setSelectedWard(""); // Reset selected ward when province changes
+      setDistricts([]); // Reset districts when province changes
+      setSelectedWard(null); // Reset selected ward when province changes
       try {
         const response = await fetch(
           `https://vn-public-apis.fpo.vn/districts/getByProvince?provinceCode=${provinceCode}&limit=-1`
@@ -72,6 +76,7 @@ const AddressComponent = ({ sendData }) => {
 
   // Fetch wards based on selected district
   useEffect(() => {
+    setSelectedWard(null);
     const fetchWards = async (districtCode) => {
       setLoading(true);
       try {
@@ -94,10 +99,9 @@ const AddressComponent = ({ sendData }) => {
     }
   }, [selectedDistrict]);
 
-  // Update address and send data when detail changes
+  // Synchronize address when province, district, ward, or detail changes
   useEffect(() => {
-    setAddress((prev) => ({
-      ...prev,
+    setAddress({
       province: selectedProvince
         ? provinces.find((p) => p.code === selectedProvince)?.name
         : "",
@@ -108,48 +112,74 @@ const AddressComponent = ({ sendData }) => {
         ? wards.find((w) => w.code === selectedWard)?.name
         : "",
       detail: detail,
-    }));
+    });
+  }, [
+    selectedProvince,
+    selectedDistrict,
+    selectedWard,
+    detail,
+    provinces,
+    districts,
+    wards,
+  ]);
 
-    // Send updated address to parent component
-    sendData(address);
-  }, [detail]);
-  // Đồng bộ districts và selectedDistrict khi selectedProvince thay đổi
+  // Send data when address changes
   useEffect(() => {
-    if (user.address?.province) {
-      const matchedProvince = provinces.find(
-        (p) => p.name === user.address.province
-      );
-      if (matchedProvince) {
-        setselectedProvince(matchedProvince.code);
+    sendData(address); // Send address data whenever it changes
+  }, [address, sendData]);
+
+  // Synchronize selectedProvince, selectedDistrict, and selectedWard from user.address when available
+  useEffect(() => {
+    if (user?.address) {
+      // Ensure we only update once
+      if (!selectedProvince) {
+        const matchedProvince = provinces.find(
+          (p) => p.name === user.address.province
+        );
+        if (matchedProvince) {
+          setselectedProvince(matchedProvince.code);
+        }
+      }
+
+      if (!selectedDistrict) {
+        const matchedDistrict = districts.find(
+          (d) => d.name === user.address.district
+        );
+        if (matchedDistrict) {
+          setSelectedDistrict(matchedDistrict.code);
+        }
+      }
+
+      if (!selectedWard) {
+        const matchedWard = wards.find((w) => w.name === user.address.ward);
+        if (matchedWard) {
+          setSelectedWard(matchedWard.code);
+        }
+      }
+
+      if (!detail && user.address.detail) {
+        setDetail(user.address.detail); // Update detail if not already set
       }
     }
-  }, [provinces, user.address]);
-
-  useEffect(() => {
-    if (user.address?.district) {
-      const matchedDistrict = districts.find(
-        (d) => d.name === user.address.district
-      );
-      if (matchedDistrict) {
-        setSelectedDistrict(matchedDistrict.code);
-      }
-    }
-  }, [districts, user.address]);
-
-  // Đồng bộ wards và selectedWard khi selectedDistrict thay đổi
-  useEffect(() => {
-    if (user.address?.ward) {
-      const matchedWard = wards.find((w) => w.name === user.address.ward);
-      if (matchedWard) {
-        setSelectedWard(matchedWard.code);
-      }
-    }
-  }, [wards, user.address]);
+  }, [
+    user?.address,
+    selectedWard,
+    selectedProvince,
+    selectedDistrict,
+    provinces,
+    districts,
+    wards,
+  ]);
 
   return (
     <div>
       {loading ? (
-        <p>Loading...</p>
+        <div>
+          <Skeleton.Input active style={{ width: "70%" }} />
+          <Skeleton.Input active style={{ width: "70%" }} />
+          <Skeleton.Input active style={{ width: "70%" }} />
+          <Skeleton.Input active style={{ width: "70%" }} />
+        </div>
       ) : (
         <div>
           <Flex justify="space-between">
@@ -205,7 +235,7 @@ const AddressComponent = ({ sendData }) => {
             <Input
               style={{ width: "70%" }}
               placeholder="Nhập địa chỉ nhận hàng"
-              value={user.address?.detail || detail}
+              value={detail}
               onChange={(e) => setDetail(e.target.value)}
             />
           </Flex>
@@ -218,4 +248,5 @@ const AddressComponent = ({ sendData }) => {
 AddressComponent.propTypes = {
   sendData: PropTypes.func.isRequired,
 };
+
 export default AddressComponent;

@@ -356,7 +356,7 @@ const ManageUsersPage = () => {
         dataSource={users}
         pagination={pagination}
         onChange={handleTableChange}
-        scroll={{ x: "max-content", y: 435 }}
+        scroll={{ x: "max-content" }}
       />
       <Modal
         open={isVisible}

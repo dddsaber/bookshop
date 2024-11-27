@@ -57,6 +57,15 @@ const ORDER_STATUS = {
   cancelled: "cancelled",
 };
 
+const STATUS_MAP = {
+  pending: { label: "Chờ duyệt", color: "blue" },
+  confirm: { label: "Xác nhận", color: "yellow" },
+  shipped: { label: "Đang giao", color: "orange" },
+  delivered: { label: "Đã giao hàng", color: "green" },
+  complete: { label: "Đã nhận", color: "darkgreen" },
+  cancelled: { label: "Đã hủy", color: "red" },
+};
+
 const DELIVERY_STATUS = {
   pending: "pending",
   processing: "processing",
@@ -110,4 +119,5 @@ module.exports = {
   htmlContentForConfirmPassword,
   confirmationUrl,
   LANGUAGE,
+  STATUS_MAP,
 };

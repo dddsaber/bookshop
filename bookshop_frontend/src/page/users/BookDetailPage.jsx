@@ -1,4 +1,4 @@
-import { Row, Col, Card, Rate, Layout, Flex, Table } from "antd";
+import { Row, Col, Card, Rate, Layout, Table } from "antd";
 import { useParams } from "react-router-dom";
 import { useContext } from "react";
 import { ProductContext } from "../../context/ProductContext";
@@ -6,7 +6,6 @@ import { ProductContext } from "../../context/ProductContext";
 import Title from "../../components/Title/Title";
 import BookImageDisplay from "../../components/Product/BookImageDisplay";
 import BookDeliveryInfomation from "../../components/Product/BookDeliveryInfomation";
-import { StarOutlined } from "@ant-design/icons";
 import Book from "../../components/Product/Book";
 import BookReview from "../../components/Product/BookReview";
 import BookBreadCrumb from "../../components/Product/BookBreadCrumb";

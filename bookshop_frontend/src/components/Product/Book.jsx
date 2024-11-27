@@ -35,7 +35,14 @@ const Book = ({ book }) => {
         description={
           book.discount !== 0 ? (
             <>
-              {(book.price * (1 - book.discount)).toLocaleString()} đ
+              <span style={{ color: "#b4182d", fontWeight: "bold" }}>
+                {(book.price * (1 - book.discount)).toLocaleString()}{" "}
+                đ&nbsp;&nbsp;
+                <span style={{ backgroundColor: "#b4182d", color: "#fff" }}>
+                  - {book.discount * 100} %
+                </span>
+                <br />
+              </span>
               <del
                 style={{
                   marginLeft: "10px",
@@ -46,7 +53,9 @@ const Book = ({ book }) => {
               </del>
             </>
           ) : (
-            <>{book.price.toLocaleString()} đ</>
+            <span style={{ color: "#b4182d", fontWeight: "bold" }}>
+              {book.price.toLocaleString()} đ <br /> <br />
+            </span>
           )
         }
       />

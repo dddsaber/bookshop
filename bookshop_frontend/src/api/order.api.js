@@ -13,7 +13,6 @@ export const getOrders = async (data) => {
 };
 
 export const getOrdersByUserId = async (id, data) => {
-  console.log(id, data);
   const response = await instance.post(`${baseURL}/orders-by-user/${id}`, data);
   return response;
 };
@@ -27,6 +26,11 @@ export const updateOrderStatus = async (orderId, status) => {
   const response = await instance.put(`${baseURL}/update-status/${orderId}`, {
     status,
   });
+  return response;
+};
+
+export const turnOffNotice = async (orderId) => {
+  const response = await instance.put(`${baseURL}/turn-off-notice/${orderId}`);
   return response;
 };
 

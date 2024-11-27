@@ -11,6 +11,7 @@ import {
   Modal,
   notification,
   Select,
+  Layout,
 } from "antd";
 import { useEffect, useState } from "react";
 import {
@@ -53,10 +54,12 @@ const MyOrdersPage = () => {
     }
     setLoading(true);
     try {
+      console.log(filter);
       const response = await getOrdersByUserId(userId, filter);
       if (Array.isArray(response?.data?.orders)) {
         setOrderDataList(response?.data?.orders);
         setTotalOrders(response?.data?.total); // Cập nhật tổng số đơn hàng
+        console.log(orderDataList);
       } else {
         console.error("Dữ liệu không hợp lệ:", response?.data?.orders);
       }
@@ -70,7 +73,7 @@ const MyOrdersPage = () => {
   // Effect hook to trigger data fetch
   useEffect(() => {
     if (userId) {
-      fetchData(userId); // Gọi fetchData khi có userId
+      fetchData(userId);
     }
   }, [userId, filter, reload]); // Cập nhật khi userId, filter hoặc reload thay đổi
 
@@ -143,7 +146,20 @@ const MyOrdersPage = () => {
             >
               Apply
             </Button>
-            <Button onClick={() => clearFilters()}>Reset</Button>
+            <Button
+              onClick={() => {
+                clearFilters(); // Reset the filter
+                setSelectedKeys([]); // Reset the selected keys
+                confirm();
+                setFilter((prevFilter) => ({
+                  ...prevFilter,
+                  status: undefined, // Reset filter state
+                }));
+                setReload(!reload); // Trigger re-fetch of data after reset
+              }}
+            >
+              Reset
+            </Button>
           </Space>
         </div>
       ),
@@ -167,7 +183,7 @@ const MyOrdersPage = () => {
           <Select
             style={{ width: 150 }}
             placeholder="Select payment method"
-            value={selectedKeys[0]}
+            value={selectedKeys[0] || undefined} // Ensure undefined when no value is selected
             onChange={(value) => setSelectedKeys(value ? [value] : [])}
           >
             {Object.entries(PAYMENT_METHOD_MAP).map(([key, label]) => (
@@ -180,26 +196,46 @@ const MyOrdersPage = () => {
             <Button
               type="primary"
               onClick={() => {
-                confirm();
+                confirm(); // Apply the filter
                 setFilter((prevFilter) => ({
                   ...prevFilter,
                   paymentMethod: selectedKeys[0],
                 }));
+                setReload(!reload); // Trigger re-fetch of data after reset
               }}
             >
               Apply
             </Button>
-            <Button onClick={() => clearFilters()}>Reset</Button>
+            <Button
+              onClick={() => {
+                clearFilters(); // Reset the filter
+                setSelectedKeys([]); // Reset the selected keys
+                confirm();
+                setFilter((prevFilter) => ({
+                  ...prevFilter,
+                  paymentMethod: undefined, // Reset filter state
+                }));
+                setReload(!reload); // Trigger re-fetch of data after reset
+              }}
+            >
+              Reset
+            </Button>
           </Space>
         </div>
       ),
       onFilter: (value, record) => record.paymentMethod === value,
     },
     {
+      title: "ShippingFee",
+      dataIndex: "shippingFee",
+      render: (shippingFee) => `${shippingFee.toFixed(2)} đ`,
+    },
+    {
       title: "Total",
       dataIndex: "totalAmount",
       render: (total) => `${total.toFixed(2)} đ`,
     },
+
     {
       title: "",
       fixed: "right",
@@ -327,6 +363,7 @@ const MyOrdersPage = () => {
       dataIndex: "discount",
       render: (discount) => `${discount * 100}%`,
     },
+
     {
       title: "Total",
       dataIndex: "total",
@@ -339,7 +376,7 @@ const MyOrdersPage = () => {
   ];
 
   return (
-    <div style={{ padding: "20px" }}>
+    <Layout style={{ padding: "20px", minHeight: "100vh" }}>
       <Flex gap={10} justify="space-between" style={{ marginBottom: 10 }}>
         <Flex>
           <Tooltip title="Refesh">
@@ -400,7 +437,7 @@ const MyOrdersPage = () => {
           onChange={(e) => setCancelReason(e.target.value)}
         ></TextArea>
       </Modal>
-    </div>
+    </Layout>
   );
 };
 

@@ -30,10 +30,12 @@ const { Text } = Typography;
 
 const ManageOrdersPage = () => {
   const [orderDataList, setOrderDataList] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
   const [reload, setReload] = useState(true);
   const [filter, setFilter] = useState([]);
+  const [totalOrders, setTotalOrders] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -43,6 +45,20 @@ const ManageOrdersPage = () => {
     setSelectedOrder(record);
     showModal(true);
   };
+  useEffect(() => {
+    if (keyword) {
+      const filtered = orderDataList.filter((order) =>
+        order.orderDetails.some((item) =>
+          item.title.toLowerCase().includes(keyword.toLowerCase())
+        )
+      );
+      setFilteredOrders(filtered);
+      setTotalOrders(filtered.length);
+    } else {
+      setFilteredOrders(orderDataList);
+      setTotalOrders(orderDataList.length);
+    }
+  }, [keyword, orderDataList]);
 
   const handleOk = async () => {
     try {
@@ -105,6 +121,7 @@ const ManageOrdersPage = () => {
     {
       title: "Customer",
       dataIndex: "userId",
+      width: 100,
       render: (userId) => <Text strong>{userId.name}</Text>,
     },
 
@@ -118,6 +135,56 @@ const ManageOrdersPage = () => {
         };
         return <Tag color={statusInfo.color}>{statusInfo.label}</Tag>;
       },
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
+        <div style={{ padding: 8 }}>
+          <Select
+            style={{ width: 150 }}
+            placeholder="Select status"
+            value={selectedKeys[0]}
+            onChange={(value) => setSelectedKeys(value ? [value] : [])}
+          >
+            {Object.entries(STATUS_MAP).map(([key, { label }]) => (
+              <Select.Option key={key} value={key}>
+                {label}
+              </Select.Option>
+            ))}
+          </Select>
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => {
+                confirm();
+                setFilter((prevFilter) => ({
+                  ...prevFilter,
+                  status: selectedKeys[0],
+                }));
+              }}
+            >
+              Apply
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters(); // Reset the filter
+                setSelectedKeys([]); // Reset the selected keys
+                confirm();
+                setFilter((prevFilter) => ({
+                  ...prevFilter,
+                  status: undefined, // Reset filter state
+                }));
+                setReload(!reload); // Trigger re-fetch of data after reset
+              }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      onFilter: (value, record) => record.status === value,
     },
     {
       title: "Payment Method",
@@ -127,8 +194,63 @@ const ManageOrdersPage = () => {
           PAYMENT_METHOD_MAP[paymentMethod] || "Không xác định";
         return <Text>{paymentLabel}</Text>;
       },
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }) => (
+        <div style={{ padding: 8 }}>
+          <Select
+            style={{ width: 150 }}
+            placeholder="Select payment method"
+            value={selectedKeys[0] || undefined} // Ensure undefined when no value is selected
+            onChange={(value) => setSelectedKeys(value ? [value] : [])}
+          >
+            {Object.entries(PAYMENT_METHOD_MAP).map(([key, label]) => (
+              <Select.Option key={key} value={key}>
+                {label}
+              </Select.Option>
+            ))}
+          </Select>
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => {
+                confirm(); // Apply the filter
+                setFilter((prevFilter) => ({
+                  ...prevFilter,
+                  paymentMethod: selectedKeys[0],
+                }));
+                setReload(!reload); // Trigger re-fetch of data after reset
+              }}
+            >
+              Apply
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters(); // Reset the filter
+                setSelectedKeys([]); // Reset the selected keys
+                confirm();
+                setFilter((prevFilter) => ({
+                  ...prevFilter,
+                  paymentMethod: undefined, // Reset filter state
+                }));
+                setReload(!reload); // Trigger re-fetch of data after reset
+              }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      onFilter: (value, record) => record.paymentMethod === value,
     },
-
+    {
+      title: "Shipping Fee",
+      dataIndex: "shippingFee",
+      render: (fee) => `${fee.toFixed(2)} đ`,
+    },
     {
       title: "Total",
       dataIndex: "totalAmount",
@@ -214,11 +336,11 @@ const ManageOrdersPage = () => {
         </Flex>
       </Flex>
       <Table
-        scroll={{ x: "max-content", y: 435 }}
+        scroll={{ x: "max-content" }}
         rowKey={(record) => record._id}
         columns={columns}
-        dataSource={orderDataList}
-        pagination={{ pageSize: 10, current: 1, total: 0 }}
+        dataSource={filteredOrders}
+        pagination={{ pageSize: 10, current: 1, total: totalOrders }}
         loading={loading}
         bordered
         expandable={{
@@ -268,6 +390,12 @@ const ManageOrdersPage = () => {
             {selectedOrder?.address
               ? `${selectedOrder.address.detail}, ${selectedOrder.address.ward}, ${selectedOrder.address.district}, ${selectedOrder.address.province}`
               : "Chưa có thông tin địa chỉ"}
+          </Descriptions.Item>
+          <Descriptions.Item label="Distance">
+            {selectedOrder?.distance}
+          </Descriptions.Item>
+          <Descriptions.Item label="Shipping Fee">
+            {selectedOrder?.shippingFee}
           </Descriptions.Item>
         </Descriptions>
         <label>

@@ -13,6 +13,7 @@ const {
   calculateMonthlyConversionRate,
   getTopSellingBooks,
   getOrdersByUserId,
+  turnOffNotice,
 } = require("../controllers/order/order.controller");
 
 const router = Router();
@@ -28,6 +29,8 @@ router.put("/update-status/:id", updateOrderStatus);
 router.put("/cancel-order/:id", cancelOrder);
 
 router.put("/update/:id", updateOrder);
+
+router.put("/turn-off-notice/:id", turnOffNotice);
 
 router.post("/stats", getOrderStats);
 

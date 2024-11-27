@@ -1,10 +1,10 @@
 import {
-  BellOutlined,
   BookOutlined,
   CarOutlined,
   DashboardOutlined,
   DashOutlined,
   FolderOutlined,
+  GifOutlined,
   HomeOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
@@ -49,7 +49,7 @@ const Sidebar = ({ collapsed, setCollapsed, user, userType }) => {
     menuItems.push({
       key: "category",
       icon: <FolderOutlined />,
-      label: "The loai",
+      label: "Thể loại",
       link: "#",
       children: categoriesLv1.map((category) => {
         // Xây dựng children cho từng category
@@ -103,11 +103,19 @@ const Sidebar = ({ collapsed, setCollapsed, user, userType }) => {
           label: "Book",
           link: "/books",
         });
+
         menuItems.push({
           key: "orders",
           icon: <ShoppingCartOutlined />,
           label: "Orders",
           link: "/orders",
+        });
+
+        menuItems.push({
+          key: "coupons",
+          icon: <GifOutlined />,
+          label: "Coupons",
+          link: "/coupons",
         });
 
         menuItems.push({
@@ -131,18 +139,6 @@ const Sidebar = ({ collapsed, setCollapsed, user, userType }) => {
         break;
       }
       case TYPE_USER.user: {
-        menuItems.push({
-          key: "myorders",
-          icon: <ShoppingCartOutlined />,
-          label: "Orders",
-          link: "/myorders",
-        });
-        menuItems.push({
-          key: "notifications",
-          icon: <BellOutlined />,
-          label: "Notifications",
-          link: "/notifications",
-        });
         menuItems.push({
           key: "myorders",
           icon: <OrderedListOutlined />,

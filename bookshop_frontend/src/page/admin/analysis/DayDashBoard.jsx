@@ -70,6 +70,7 @@ const DayDashBoard = () => {
             borderWidth: 1,
             fill: false, // Không tô màu phía dưới đường
             yAxisID: "y1", // Gắn với trục y1 (Doanh thu)
+            tension: 0.3,
           },
           {
             label: "Số lượng đơn hàng",
@@ -79,6 +80,7 @@ const DayDashBoard = () => {
             borderWidth: 1,
             fill: false, // Không tô màu phía dưới đường
             yAxisID: "y2", // Gắn với trục y2 (Số lượng đơn hàng)
+            tension: 0.3,
           },
         ],
       });

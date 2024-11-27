@@ -5,12 +5,11 @@ const Footer = () => {
     <footer className="footer">
       {/* Cột 1: Thông tin công ty */}
       <div className="column">
-        <h3>Fahasa.com</h3>
-        <p>Lầu 5, 387-389 Hai Bà Trưng Quận 3 TP HCM</p>
-        <p>Công Ty Cổ Phần Phát Hành Sách TP HCM - FAHASA</p>
-        <p>60 - 62 Lê Lợi, Quận 1, TP. HCM, Việt Nam</p>
-        <p>Fahasa.com nhận đặt hàng trực tuyến và giao hàng tận nơi.</p>
-        <div className="social-icons">
+        <h3>bookshop.com</h3>
+        <p>Công Ty Cổ Phần Phát Hành Sách CT</p>
+        <p>Hưng Lợi, Ninh Kiều, Cần Thơ, Việt Nam</p>
+        <p>Bookshop.com nhận đặt hàng trực tuyến và giao hàng tận nơi.</p>
+        <div className="social-icons" style={{ display: "flex" }}>
           <a href="#">
             <img
               src="https://img.icons8.com/ios-glyphs/30/facebook.png"
@@ -38,7 +37,7 @@ const Footer = () => {
         <a href="#">Điều khoản sử dụng</a>
         <a href="#">Chính sách bảo mật thông tin cá nhân</a>
         <a href="#">Chính sách bảo mật thanh toán</a>
-        <a href="#">Giới thiệu Fahasa</a>
+        <a href="#">Giới thiệu BookShop</a>
         <a href="#">Hệ thống trung tâm - nhà sách</a>
       </div>
 
@@ -58,25 +57,6 @@ const Footer = () => {
         <a href="#">Thay đổi địa chỉ khách hàng</a>
         <a href="#">Chi tiết tài khoản</a>
         <a href="#">Lịch sử mua hàng</a>
-      </div>
-
-      {/* Footer Bottom */}
-      <div className="footer-bottom">
-        <p>
-          Giấy chứng nhận Đăng ký Kinh doanh số 0304132047 do Sở Kế hoạch và Đầu
-          tư TP.HCM cấp
-        </p>
-        <div className="payment-methods">
-          <img
-            src="https://img.icons8.com/ios-glyphs/30/vnpay.png"
-            alt="VNPay"
-          />
-          <img src="https://img.icons8.com/ios-glyphs/30/momo.png" alt="MoMo" />
-          <img
-            src="https://img.icons8.com/ios-glyphs/30/shopee.png"
-            alt="ShopeePay"
-          />
-        </div>
       </div>
     </footer>
   );

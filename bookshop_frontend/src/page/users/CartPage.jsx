@@ -39,7 +39,7 @@ const CartPage = () => {
 
   // Hàm tính tổng tiền của sản phẩm
   const calculateTotal = (item) => {
-    return item.price * item.quantity;
+    return item.price * item.quantity * (1 - item.discount);
   };
 
   // Hàm xử lý chọn/bỏ chọn sản phẩm
@@ -117,9 +117,32 @@ const CartPage = () => {
     {
       title: "Giá",
       dataIndex: "price",
-      render: (price) => (
-        <span>{price ? price.toLocaleString() : "N/A"} đ</span>
-      ),
+      width: 180,
+      render: (price, record) => {
+        // Kiểm tra xem có discount không
+        const discountPrice = record.discount
+          ? price - price * record.discount
+          : null;
+
+        return (
+          <span>
+            {discountPrice ? (
+              <>
+                <span
+                  style={{ textDecoration: "line-through", marginRight: "8px" }}
+                >
+                  {price.toLocaleString()} đ
+                </span>
+                <span style={{ color: "red" }}>
+                  {discountPrice.toLocaleString()} đ
+                </span>
+              </>
+            ) : (
+              <span>{price.toLocaleString()} đ</span>
+            )}
+          </span>
+        );
+      },
     },
     {
       title: "Số lượng",
@@ -165,7 +188,7 @@ const CartPage = () => {
         </Col>
         <Col span={8}>
           <Card
-            title={"Thanh toan"}
+            title={"Thanh toán"}
             style={{ marginTop: "20px", textAlign: "left" }}
           >
             <h3>Tổng tiền: {calculateSelectedTotal()}đ</h3>
